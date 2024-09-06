@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Consola from './Consola'; 
+import TableroContent from './TableroContent';
 
 const Dashboard: React.FC = () => {
   const [activeSection, setActiveSection] = useState<'dashboard' | 'terminal'>('dashboard');
@@ -54,37 +55,7 @@ const Dashboard: React.FC = () => {
           <div className="container-fluid">
             {/* Renderizado condicional del contenido basado en el estado activo */}
             {activeSection === 'dashboard' ? (
-              <div className="row">
-                {/* Contenido del Dashboard */}
-                <div className="col-lg-3 col-6">
-                  <div className="small-box bg-info">
-                    <div className="inner">
-                      <h3>150</h3>
-                      <p>New Orders</p>
-                    </div>
-                    <div className="icon">
-                      <i className="fas fa-shopping-cart"></i>
-                    </div>
-                    <a href="/" className="small-box-footer">
-                      More info <i className="fas fa-arrow-circle-right"></i>
-                    </a>
-                  </div>
-                </div>
-                <div className="col-lg-3 col-6">
-                  <div className="small-box bg-success">
-                    <div className="inner">
-                      <h3>53%</h3>
-                      <p>Bounce Rate</p>
-                    </div>
-                    <div className="icon">
-                      <i className="fas fa-chart-bar"></i>
-                    </div>
-                    <a href="/" className="small-box-footer">
-                      More info <i className="fas fa-arrow-circle-right"></i>
-                    </a>
-                  </div>
-                </div>
-              </div>
+            <TableroContent />  //llamamos al componente TableroContent 
             ) : (
               // Si está seleccionada la sección "Terminal", renderiza el componente Consola
               <Consola />
