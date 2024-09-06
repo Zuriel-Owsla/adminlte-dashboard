@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './customStyles.css'; 
+import '../customStyles.css'; 
 
 const Dashboard: React.FC = () => {
   const [activeSection, setActiveSection] = useState<'dashboard' | 'terminal'>('dashboard');

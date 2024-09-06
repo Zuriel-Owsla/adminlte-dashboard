@@ -1,0 +1,21 @@
+.custom-textarea {
+    background-color: rgb(49, 49, 49);   
+    color: yellow;            
+    font-family: Consolas, Monaco, monospace;
+    font-size: 16px;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    resize: none; 
+  }
+  
+  .custom-textarea:focus {
+    background-color: rgb(49, 49, 49);  
+    color: yellow;            
+    outline: none;             
+  }
+  
+  .custom-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.7); 
+  }
+  
