@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../customStyles.css'; 
+import Consola from './Consola'; 
 
 const Dashboard: React.FC = () => {
   const [activeSection, setActiveSection] = useState<'dashboard' | 'terminal'>('dashboard');
@@ -16,11 +16,8 @@ const Dashboard: React.FC = () => {
             <ul className="nav nav-pills nav-sidebar flex-column" role="menu">
               {/* Opción del Dashboard */}
               <li className="nav-item">
-                <a
-                  href="#"
-                  className={`nav-link ${activeSection === 'dashboard' ? 'active' : ''}`}
-                  onClick={() => setActiveSection('dashboard')} // Cambia a Dashboard
-                >
+                <a href="#" className={`nav-link ${activeSection === 'dashboard' ? 'active' : ''}`}
+                  onClick={() => setActiveSection('dashboard')}>
                   <i className="nav-icon fas fa-tachometer-alt"></i>
                   <p>Dashboard</p>
                 </a>
@@ -28,8 +25,7 @@ const Dashboard: React.FC = () => {
 
               {/* Opción del Terminal */}
               <li className="nav-item">
-                <a
-                  href="#"
+                <a href="#"
                   className={`nav-link ${activeSection === 'terminal' ? 'active' : ''}`}
                   onClick={() => setActiveSection('terminal')} // Cambiamos a Terminal
                 >
@@ -90,17 +86,8 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
             ) : (
-              // Al seleccionar Terminal
-              <div className="row">
-                <div className="col-12">
-                  <textarea
-                    className="form-control custom-textarea" // CSS
-                    rows={10}
-                    placeholder="Escribe tus sentencias SQL aquí..."
-                  ></textarea>
-                  <button className="btn btn-primary mt-3">Ejecutar</button> 
-                </div>
-              </div>
+              // Si está seleccionada la sección "Terminal", renderiza el componente Consola
+              <Consola />
             )}
           </div>
         </section>
