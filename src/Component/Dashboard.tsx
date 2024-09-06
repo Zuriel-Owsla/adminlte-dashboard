@@ -19,7 +19,7 @@ const Dashboard: React.FC = () => {
                 <a href="#" className={`nav-link ${activeSection === 'dashboard' ? 'active' : ''}`}
                   onClick={() => setActiveSection('dashboard')}>
                   <i className="nav-icon fas fa-tachometer-alt"></i>
-                  <p>Dashboard</p>
+                  <p>Tablero</p>
                 </a>
               </li>
 
@@ -44,7 +44,7 @@ const Dashboard: React.FC = () => {
           <div className="container-fluid">
             <div className="row mb-2">
               <div className="col-sm-6">
-                <h1>{activeSection === 'dashboard' ? 'Dashboard' : 'Terminal'}</h1>
+                <h1>{activeSection === 'dashboard' ? 'Tablero' : 'Terminal'}</h1>
               </div>
             </div>
           </div>
