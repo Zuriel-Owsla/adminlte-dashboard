@@ -1,3 +1,5 @@
+### `npm run build` fails to minify
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -5,6 +7,9 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 ## Available Scripts
 
 In the project directory, you can run:
+
+### `npm install @types/uuid --save-dev`
+Modulos necesarios para el UUID
 
 ### `npm start`
 
