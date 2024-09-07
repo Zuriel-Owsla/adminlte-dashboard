@@ -1,5 +1,4 @@
 ### `npm run build` fails to minify
-Modulos necesarios para el UUID
 
 # Getting Started with Create React App
 
@@ -10,6 +9,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 In the project directory, you can run:
 
 ### `npm install @types/uuid --save-dev`
+Modulos necesarios para el UUID
 
 ### `npm start`
 
