@@ -4,29 +4,17 @@ import '../estilos.css';
 
 const Consola: React.FC = () => {
   const [sqlCommand, setSqlCommand] = useState('');
-  const [databaseUUID, setDatabaseUUID] = useState(generarUUID());  // Generamos un UUID
+  const [databaseUUID, setDatabaseUUID] = useState(generarUUID());  // Generamos un UUID único para la base de datos
 
-  // Función para limpiar la sentencia SQL (remover lo que esté después del paréntesis)
-  const sanitizeSQL = (sql: string): string => {
-    const regex = /(CREATE (DATABASE|TABLE).+?;)/i;
-    const match = sql.match(regex);
-    return match ? match[0] : ''; // si hay coincidencia, devuelve la parte valida, si no, devuelve vacío
-  };
-
-  // Función que maneja la ejecución de la sentencia SQL
+  // Función para manejar la ejecución de la sentencia SQL
   const handleExecute = async () => {
     if (!sqlCommand) {
       alert('Por favor, ingresa una sentencia SQL válida.');
       return;
     }
 
-    // Limpiamos la sentencia SQL antes de enviarla
-    const cleanedSQL = sanitizeSQL(sqlCommand);
-
-    if (!cleanedSQL) {
-      alert('Sentencia SQL no válida.');
-      return;
-    }
+    // No es necesario limpiar el SQL en este caso, ya que aceptamos cualquier sentencia SQL (CREATE TABLE, etc.)
+    const cleanedSQL = sqlCommand.trim(); // Aceptamos la sentencia tal cual, solo limpiamos los espacios
 
     try {
       const response = await fetch('http://localhost/crear_tablas.php', {
@@ -35,13 +23,13 @@ const Consola: React.FC = () => {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          database: databaseUUID, // Usamos el UUID generado
-          datos: cleanedSQL,      // Enviamos la sentencia SQL limpia
+          database: databaseUUID, // Usamos el UUID como nombre de la base de datos
+          datos: cleanedSQL,      // Enviamos la sentencia SQL tal como la ingresó el usuario
         }),
       });
 
-      const result = await response.text();
-      console.log(result);
+      const result = await response.text();  // Capturamos la respuesta del servidor
+      console.log(result);  // Mostramos la respuesta en la consola
 
       if (response.ok) {
         alert('Sentencia ejecutada con éxito.');
@@ -49,7 +37,7 @@ const Consola: React.FC = () => {
         alert(`Error: ${result}`);
       }
     } catch (error) {
-      // verificar errores desde consola
+      // Manejamos los errores
       if (error instanceof Error) {
         console.error('Error al ejecutar la sentencia:', error.message);
         alert(`Hubo un error al ejecutar la sentencia: ${error.message}`);
@@ -62,7 +50,7 @@ const Consola: React.FC = () => {
 
   return (
     <div>
-      <textarea //texarea
+      <textarea
         className="form-control custom-textarea" // CSS
         rows={10}
         placeholder="Escribe tus sentencias SQL aquí..."
