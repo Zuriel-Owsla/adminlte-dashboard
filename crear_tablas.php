@@ -40,6 +40,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $databaseName = generateRandomDatabaseName();
     }
 
+    // Mostrar el nombre de la base de datos en los logs para depuración
+    error_log("Nombre de la base de datos: $databaseName");
+
     // Establecer conexión a MySQL
     $conn = new mysqli($servername, $username, $password);
 
@@ -49,15 +52,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Crear la base de datos si es la primera vez
-    if (!isset($data['databaseName'])) {
-        $createDbQuery = "CREATE DATABASE $databaseName";
-        if ($conn->query($createDbQuery) === TRUE) {
-            $responseMessages[] = "Base de datos '$databaseName' creada con éxito.";
-        } else {
-            echo json_encode(['message' => "Error al crear la base de datos: " . $conn->error]);
-            $conn->close();
-            exit();
-        }
+    $createDbQuery = "CREATE DATABASE $databaseName";
+    if ($conn->query($createDbQuery) === TRUE) {
+        $responseMessages[] = "Base de datos '$databaseName' creada con éxito.";
+    } else {
+        echo json_encode(['message' => "Error al crear la base de datos: " . $conn->error]);
+        error_log("Error al crear la base de datos: " . $conn->error);  // Depuración
+        $conn->close();
+        exit();
     }
 
     // Seleccionar la base de datos
@@ -98,4 +100,3 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 } else {
     echo json_encode(['message' => "Método no soportado. Utiliza POST para enviar la sentencia SQL."]);
 }
-?>
