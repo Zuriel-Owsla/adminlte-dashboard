@@ -4,32 +4,19 @@ import '../estilos.css';
 
 const Consola: React.FC = () => {
   const [sqlCommand, setSqlCommand] = useState('');
-  const [databaseUUID, setDatabaseUUID] = useState(() => {
-    // Recuperamos el UUID de localStorage
-    let storedUUID = localStorage.getItem('databaseUUID');
-    // Si existe en localStorage, eliminamos los guiones por si acaso fueron guardados
-    if (storedUUID) {
-      storedUUID = storedUUID.replace(/-/g, ''); // Aseguramos que no haya guiones
-    } else {
-      // Si no está en localStorage, generamos uno nuevo y lo guardamos sin guiones
-      storedUUID = generarUUID();
-      localStorage.setItem('databaseUUID', storedUUID);
-    }
-    console.log(`Nombre de la base de datos UUID sin guiones (final): ${storedUUID}`);  // Depuración
-    return storedUUID;
-  });
 
   // Función para limpiar y reemplazar el nombre de la base de datos
   const processSQL = (sql: string) => {
     // Expresión regular para identificar la sentencia CREATE DATABASE
     const regex = /CREATE DATABASE\s+([a-zA-Z0-9_]+);?/i;
     if (regex.test(sql)) {
-      // Si la sentencia es CREATE DATABASE, reemplazamos el nombre por el UUID sin guiones
-      const cleanedSQL = sql.replace(regex, `CREATE DATABASE ${databaseUUID};`);
-      console.log(`Sentencia SQL modificada: ${cleanedSQL}`);  // Depuración
-      return cleanedSQL;
+      // Generamos un nuevo UUID para cada CREATE DATABASE
+      const newUUID = generarUUID();
+      console.log(`Generando nuevo UUID para la base de datos: ${newUUID}`);
+      const cleanedSQL = sql.replace(regex, `CREATE DATABASE ${newUUID};`);
+      return { cleanedSQL, newUUID }; // Devolvemos la SQL procesada y el nuevo UUID
     }
-    return sql; // Si no es CREATE DATABASE, retornamos la sentencia original
+    return { cleanedSQL: sql, newUUID: null }; // Si no es CREATE DATABASE, retornamos la sentencia original y null
   };
 
   const handleExecute = async () => {
@@ -39,7 +26,7 @@ const Consola: React.FC = () => {
     }
 
     // Procesamos la sentencia SQL
-    const processedSQL = processSQL(sqlCommand.trim());
+    const { cleanedSQL, newUUID } = processSQL(sqlCommand.trim());
 
     try {
       const response = await fetch('http://localhost/crear_tablas.php', {
@@ -48,8 +35,8 @@ const Consola: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          databaseName: databaseUUID, // Enviamos el UUID como nombre de la base de datos
-          sqlQuery: processedSQL,      // Sentencia SQL procesada
+          databaseName: newUUID ? newUUID : 'default_db', // Enviamos el nuevo UUID o un valor por defecto
+          sqlQuery: cleanedSQL,      // Sentencia SQL procesada
         }),
       });
 
@@ -58,8 +45,6 @@ const Consola: React.FC = () => {
 
       if (response.ok) {
         alert('Sentencia ejecutada con éxito.');
-        // Guardamos el UUID en localStorage
-        localStorage.setItem('databaseUUID', databaseUUID);
       } else {
         alert(`Error: ${result.message}`);
       }
