@@ -8,15 +8,48 @@ const Consola: React.FC = () => {
   // Función para limpiar y reemplazar el nombre de la base de datos
   const processSQL = (sql: string) => {
     // Expresión regular para identificar la sentencia CREATE DATABASE
-    const regex = /CREATE DATABASE\s+([a-zA-Z0-9_]+);?/i;
-    if (regex.test(sql)) {
+    const createDbRegex = /CREATE DATABASE\s+([a-zA-Z0-9_]+);?/i;
+    const createTableRegex = /CREATE TABLE\s+([a-zA-Z0-9_]+)\s*\((.+)\);?/i;
+
+    if (createDbRegex.test(sql)) {
       // Generamos un nuevo UUID para cada CREATE DATABASE
       const newUUID = generarUUID();
       console.log(`Generando nuevo UUID para la base de datos: ${newUUID}`);
-      const cleanedSQL = sql.replace(regex, `CREATE DATABASE ${newUUID};`);
-      return { cleanedSQL, newUUID }; // Devolvemos la SQL procesada y el nuevo UUID
+      // Guardamos el UUID en sessionStorage para esta sesión
+      sessionStorage.setItem('currentDatabaseUUID', newUUID);
+      const cleanedSQL = sql.replace(createDbRegex, `CREATE DATABASE ${newUUID};`);
+      return { cleanedSQL, newUUID };
+    } else if (createTableRegex.test(sql)) {
+      // Si el usuario intenta crear una tabla
+      const databaseUUID = sessionStorage.getItem('currentDatabaseUUID');
+      if (!databaseUUID) {
+        alert('Por favor, crea una base de datos primero.');
+        return { cleanedSQL: null, newUUID: null };
+      }
+
+      // Procesamos la sentencia de CREATE TABLE y asignamos tipos de datos predeterminados
+      const match = createTableRegex.exec(sql);
+      if (!match) {
+        alert('Error: Formato de CREATE TABLE no válido.');
+        return { cleanedSQL: null, newUUID: null };
+      }
+      const tableName = match[1];
+      const columns = match[2].split(',').map(column => column.trim());
+
+      // Asumimos que la primera columna es INT y las demás son VARCHAR(255), sin AUTO_INCREMENT ni PRIMARY KEY
+      let processedColumns = columns.map((col, idx) => {
+        if (idx === 0) {
+          return `${col} INT`; // Solo INT para la primera columna
+        }
+        return `${col} VARCHAR(255)`; // VARCHAR(255) para las demás columnas
+      });
+
+      const cleanedSQL = `CREATE TABLE ${tableName} (${processedColumns.join(', ')});`;
+      console.log(`Sentencia SQL modificada: ${cleanedSQL}`);
+      return { cleanedSQL, newUUID: databaseUUID };
     }
-    return { cleanedSQL: sql, newUUID: null }; // Si no es CREATE DATABASE, retornamos la sentencia original y null
+
+    return { cleanedSQL: sql, newUUID: null }; // Si no es CREATE DATABASE o CREATE TABLE
   };
 
   const handleExecute = async () => {
@@ -28,6 +61,8 @@ const Consola: React.FC = () => {
     // Procesamos la sentencia SQL
     const { cleanedSQL, newUUID } = processSQL(sqlCommand.trim());
 
+    if (!cleanedSQL) return;
+
     try {
       const response = await fetch('http://localhost/crear_tablas.php', {
         method: 'POST',
@@ -35,8 +70,8 @@ const Consola: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          databaseName: newUUID ? newUUID : 'default_db', // Enviamos el nuevo UUID o un valor por defecto
-          sqlQuery: cleanedSQL,      // Sentencia SQL procesada
+          databaseName: newUUID, // Enviamos el UUID de la base de datos actual
+          sqlQuery: cleanedSQL,  // Sentencia SQL procesada
         }),
       });
 
