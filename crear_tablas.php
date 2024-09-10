@@ -40,9 +40,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $databaseName = generateRandomDatabaseName();
     }
 
-    // Mostrar el nombre de la base de datos en los logs para depuración
-    error_log("Nombre de la base de datos: $databaseName");
-
     // Establecer conexión a MySQL
     $conn = new mysqli($servername, $username, $password);
 
@@ -51,42 +48,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // Crear la base de datos si es la primera vez
-    $createDbQuery = "CREATE DATABASE $databaseName";
-    if ($conn->query($createDbQuery) === TRUE) {
-        $responseMessages[] = "Base de datos '$databaseName' creada con éxito.";
+    // Si la consulta es CREATE DATABASE, intentamos crear la base de datos
+    if (preg_match('/CREATE DATABASE/i', $sqlQuery)) {
+        $createDbQuery = "CREATE DATABASE $databaseName";
+        if ($conn->query($createDbQuery) === TRUE) {
+            $responseMessages[] = "Base de datos '$databaseName' creada con éxito.";
+        } else {
+            echo json_encode(['message' => "Error al crear la base de datos: " . $conn->error]);
+            $conn->close();
+            exit();
+        }
     } else {
-        echo json_encode(['message' => "Error al crear la base de datos: " . $conn->error]);
-        error_log("Error al crear la base de datos: " . $conn->error);  // Depuración
-        $conn->close();
-        exit();
-    }
+        // Si la consulta es otra por ejemplo CREATE TABLE, seleccionamos la base de datos y ejecutamos la consulta
+        $conn->select_db($databaseName);
 
-    // Seleccionar la base de datos
-    $conn->select_db($databaseName);
-
-    // Ejecutar la consulta SQL
-    if ($conn->multi_query($sqlQuery)) {
-        do {
-            // Store first result set
-            if ($result = $conn->store_result()) {
-                while ($row = $result->fetch_assoc()) {
-                    // Handle the result set if needed
+        // Ejecutar la consulta SQL (ejemplo: CREATE TABLE)
+        if ($conn->multi_query($sqlQuery)) {
+            do {
+                // Almacenamos el primer conjunto de resultados
+                if ($result = $conn->store_result()) {
+                    while ($row = $result->fetch_assoc()) {
+                        // Manejamos el resultado si es necesario
+                    }
+                    $result->free();
                 }
-                $result->free();
-            }
-            // Check for errors
-            if ($conn->errno) {
-                echo json_encode(['message' => "Error al ejecutar la consulta: " . $conn->error]);
-                $conn->close();
-                exit();
-            }
-        } while ($conn->more_results() && $conn->next_result());
-        $responseMessages[] = "Consultas SQL ejecutadas con éxito.";
-    } else {
-        echo json_encode(['message' => "Error al ejecutar las consultas: " . $conn->error]);
-        $conn->close();
-        exit();
+                // Verificamos errores
+                if ($conn->errno) {
+                    echo json_encode(['message' => "Error al ejecutar la consulta: " . $conn->error]);
+                    $conn->close();
+                    exit();
+                }
+            } while ($conn->more_results() && $conn->next_result());
+            $responseMessages[] = "Consultas SQL ejecutadas con éxito.";
+        } else {
+            echo json_encode(['message' => "Error al ejecutar las consultas: " . $conn->error]);
+            $conn->close();
+            exit();
+        }
     }
 
     // Cerrar la conexión
