@@ -9,6 +9,7 @@ const Consola: React.FC = () => {
   const processSQL = (sql: string) => {
     // Expresión regular para identificar la sentencia CREATE DATABASE
     const createDbRegex = /CREATE DATABASE\s+([a-zA-Z0-9_]+);?/i;
+    //Ahora pra CREATE TABLE
     const createTableRegex = /CREATE TABLE\s+([a-zA-Z0-9_]+)\s*\((.+)\);?/i;
 
     if (createDbRegex.test(sql)) {
@@ -36,12 +37,12 @@ const Consola: React.FC = () => {
       const tableName = match[1];
       const columns = match[2].split(',').map(column => column.trim());
 
-      // Asumimos que la primera columna es INT y las demás son VARCHAR(255), sin AUTO_INCREMENT ni PRIMARY KEY
+      // Asumimos que la primera columna es la llave primaria y las demás son VARCHAR(255)
       let processedColumns = columns.map((col, idx) => {
         if (idx === 0) {
-          return `${col} INT`; // Solo INT para la primera columna
+          return `${col} INT AUTO_INCREMENT PRIMARY KEY`;
         }
-        return `${col} VARCHAR(255)`; // VARCHAR(255) para las demás columnas
+        return `${col} VARCHAR(255)`;
       });
 
       const cleanedSQL = `CREATE TABLE ${tableName} (${processedColumns.join(', ')});`;
