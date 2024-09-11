@@ -9,7 +9,6 @@ const Consola: React.FC = () => {
   const processSQL = (sql: string) => {
     // Expresión regular para identificar la sentencia CREATE DATABASE
     const createDbRegex = /CREATE DATABASE\s+([a-zA-Z0-9_]+);?/i;
-    //Ahora pra CREATE TABLE
     const createTableRegex = /CREATE TABLE\s+([a-zA-Z0-9_]+)\s*\((.+)\);?/i;
 
     if (createDbRegex.test(sql)) {
@@ -34,16 +33,51 @@ const Consola: React.FC = () => {
         alert('Error: Formato de CREATE TABLE no válido.');
         return { cleanedSQL: null, newUUID: null };
       }
-      const tableName = match[1];
-      const columns = match[2].split(',').map(column => column.trim());
 
-      // Asumimos que la primera columna es la llave primaria y las demás son VARCHAR(255)
-      let processedColumns = columns.map((col, idx) => {
-        if (idx === 0) {
-          return `${col} INT AUTO_INCREMENT PRIMARY KEY`;
+      const tableName = match[1];
+      let columns = match[2].split(',').map(column => column.trim());
+
+      // Almacenamos las columnas procesadas
+      let processedColumns: string[] = [];
+      let foreignKeys: string[] = []; // Para almacenar las llaves foráneas
+      let columnNames: Set<string> = new Set(); // Para rastrear las columnas y evitar duplicados
+
+      // Procesamos las columnas de llaves foráneas primero para asegurar que se manejen correctamente
+      columns.forEach((col) => {
+        const foreignKeyRegex = /FOREIGN KEY\s*\(([^)]+)\)\s*REFERENCES\s+([a-zA-Z0-9_]+)\s*\(([^)]+)\)/i;
+        const foreignKeyMatch = foreignKeyRegex.exec(col);
+
+        if (foreignKeyMatch) {
+          const foreignKeyColumn = foreignKeyMatch[1].trim(); // Columna que será llave foránea
+          const referencedTable = foreignKeyMatch[2].trim(); // Tabla referenciada
+          const referencedColumn = foreignKeyMatch[3].trim(); // Columna referenciada
+
+          // Añadimos la columna y la llave foránea solo si no se ha añadido antes
+          if (!columnNames.has(foreignKeyColumn)) {
+            processedColumns.push(`${foreignKeyColumn} INT`); // Aseguramos que la columna sea INT
+            foreignKeys.push(`FOREIGN KEY (${foreignKeyColumn}) REFERENCES ${referencedTable}(${referencedColumn})`);
+            columnNames.add(foreignKeyColumn); // Marcamos que esta columna ya ha sido agregada
+          }
         }
-        return `${col} VARCHAR(255)`;
       });
+
+      // Procesamos el resto de las columnas
+      columns.forEach((col, idx) => {
+        // No procesamos las columnas que ya son llaves foráneas
+        if (!columnNames.has(col)) {
+          // Primera columna es la llave primaria (INT AUTO_INCREMENT)
+          if (idx === 0) {
+            processedColumns.push(`${col} INT AUTO_INCREMENT PRIMARY KEY`);
+          } else {
+            // Para las demás columnas asumimos VARCHAR(255), excepto las llaves foráneas
+            processedColumns.push(`${col} VARCHAR(255)`);
+          }
+          columnNames.add(col); // Marcamos que la columna ha sido agregada
+        }
+      });
+
+      // Añadimos las llaves foráneas al final de las columnas procesadas
+      processedColumns = processedColumns.concat(foreignKeys);
 
       const cleanedSQL = `CREATE TABLE ${tableName} (${processedColumns.join(', ')});`;
       console.log(`Sentencia SQL modificada: ${cleanedSQL}`);
