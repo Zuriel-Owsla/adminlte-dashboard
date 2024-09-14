@@ -1,13 +1,36 @@
 import React, { useState } from 'react';
+import CreateTableForm from './CreateTableForm';
+import ColumnConfig from './ColumnConfig';
 
 const Sqlcontent: React.FC = () => {
   const [tableName, setTableName] = useState('');
-  const [columnCount, setColumnCount] = useState(1); // Por defecto, comenzamos con una columna
+  const [columnCount, setColumnCount] = useState(1); // Número de columnas
+  const [columns, setColumns] = useState<any[]>([]); // Array para almacenar las columnas
+  const [showColumnConfig, setShowColumnConfig] = useState(false); // Controlar la visibilidad del formulario de columnas
 
-  // Función para manejar la creación de la tabla (de momento no hará nada)
+  // Tipos de datos disponibles para las columnas
+  const dataTypes = ['INT', 'VARCHAR', 'TEXT', 'DATE', 'BOOLEAN'];
+
+  // Manejar la creación de las columnas y ocultar el formulario inicial
   const handleCreateTable = () => {
-    console.log(`Nombre de la tabla: ${tableName}`);
-    console.log(`Número de columnas: ${columnCount}`);
+    // Inicializamos un array de columnas vacío con el número de columnas deseado
+    const newColumns = Array.from({ length: columnCount }, () => ({
+      name: '',
+      type: 'INT',
+      length: '',
+      defaultValue: 'NULL',
+      isPrimary: false,
+      isAutoIncrement: false,
+    }));
+    setColumns(newColumns); // Guardamos las columnas generadas
+    setShowColumnConfig(true); // Mostramos el formulario de configuración de columnas
+  };
+
+  // Manejar el cambio de los valores de cada columna
+  const handleColumnChange = (index: number, key: string, value: any) => {
+    const updatedColumns = [...columns];
+    updatedColumns[index][key] = value;
+    setColumns(updatedColumns); // Actualizamos el estado de las columnas
   };
 
   return (
@@ -16,39 +39,34 @@ const Sqlcontent: React.FC = () => {
         <h3 className="card-title">Crear nueva tabla</h3>
       </div>
       <div className="card-body">
-        <form>
-          <div className="form-group">
-            <label htmlFor="tableName">Nombre de la tabla</label>
-            <input
-              type="text"
-              className="form-control"
-              id="tableName"
-              placeholder="Ingrese el nombre de la tabla"
-              value={tableName}
-              onChange={(e) => setTableName(e.target.value)}
-            />
-          </div>
+        {/* Mostrar el formulario inicial solo si no se ha hecho clic en "Crear" */}
+        {!showColumnConfig && (
+          <CreateTableForm
+            tableName={tableName}
+            columnCount={columnCount}
+            setTableName={setTableName}
+            setColumnCount={setColumnCount}
+            handleCreateTable={handleCreateTable}
+          />
+        )}
 
-          <div className="form-group">
-            <label htmlFor="columnCount">Número de columnas</label>
-            <input
-              type="number"
-              className="form-control"
-              id="columnCount"
-              min="1"
-              value={columnCount}
-              onChange={(e) => setColumnCount(parseInt(e.target.value))}
-            />
+        {/* Mostrar el formulario de configuración de columnas si ya se ha hecho clic en "Crear" */}
+        {showColumnConfig && (
+          <div className="mt-4">
+            <h4>Configurar columnas</h4>
+            <form>
+              {columns.map((col, index) => (
+                <ColumnConfig
+                  key={index}
+                  index={index}
+                  column={col}
+                  dataTypes={dataTypes}
+                  handleColumnChange={handleColumnChange}
+                />
+              ))}
+            </form>
           </div>
-
-          <button
-            type="button"
-            className="btn btn-primary mt-3"
-            onClick={handleCreateTable}
-          >
-            Crear
-          </button>
-        </form>
+        )}
       </div>
     </div>
   );

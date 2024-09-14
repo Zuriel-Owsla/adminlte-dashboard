@@ -1,29 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { generarUUID } from './generadorUUID'; 
 import '../estilos.css';
 
 const Consola: React.FC = () => {
   const [sqlCommand, setSqlCommand] = useState('');
+  const [sessionUUID, setSessionUUID] = useState<string | null>(null);
+
+  // Al cargar el componente, generamos o recuperamos el UUID de local storage
+  useEffect(() => {
+    let storedUUID = localStorage.getItem('sessionUUID');
+    
+    // Si no existe un UUID en el local storag, generamos uno nuevo
+    if (!storedUUID) {
+      storedUUID = generarUUID();
+      localStorage.setItem('sessionUUID', storedUUID); // Guardamos el nuevo UUID en el localstorasge
+    }
+    
+    setSessionUUID(storedUUID); // Establecemos el UUID en el estado
+    console.log(`UUID de la sesión: ${storedUUID}`);
+  }, []);
 
   // Función para limpiar y reemplazar el nombre de la base de datos
   const processSQL = (sql: string) => {
-    // Expresión regular para identificar la sentencia CREATE DATABASE
     const createDbRegex = /CREATE DATABASE\s+([a-zA-Z0-9_]+);?/i;
     const createTableRegex = /CREATE TABLE\s+([a-zA-Z0-9_]+)\s*\((.+)\);?/i;
 
     if (createDbRegex.test(sql)) {
-      // Generamos un nuevo UUID para cada CREATE DATABASE
-      const newUUID = generarUUID();
-      console.log(`Generando nuevo UUID para la base de datos: ${newUUID}`);
-      // Guardamos el UUID en sessionStorage para esta sesión
-      sessionStorage.setItem('currentDatabaseUUID', newUUID);
-      const cleanedSQL = sql.replace(createDbRegex, `CREATE DATABASE ${newUUID};`);
-      return { cleanedSQL, newUUID };
+      if (!sessionUUID) {
+        alert('Error: No se ha generado un UUID para la sesión.');
+        return { cleanedSQL: null, newUUID: null };
+      }
+
+      // Usamos el UUID existente en el localStorage para la base de datos
+      const cleanedSQL = sql.replace(createDbRegex, `CREATE DATABASE ${sessionUUID};`);
+      return { cleanedSQL, newUUID: sessionUUID };
+
     } else if (createTableRegex.test(sql)) {
-      // Si el usuario intenta crear una tabla
-      const databaseUUID = sessionStorage.getItem('currentDatabaseUUID');
-      if (!databaseUUID) {
-        alert('Por favor, crea una base de datos primero.');
+      if (!sessionUUID) {
+        alert('Error: No se ha generado un UUID para la sesión.');
         return { cleanedSQL: null, newUUID: null };
       }
 
@@ -81,7 +95,7 @@ const Consola: React.FC = () => {
 
       const cleanedSQL = `CREATE TABLE ${tableName} (${processedColumns.join(', ')});`;
       console.log(`Sentencia SQL modificada: ${cleanedSQL}`);
-      return { cleanedSQL, newUUID: databaseUUID };
+      return { cleanedSQL, newUUID: sessionUUID };
     }
 
     return { cleanedSQL: sql, newUUID: null }; // Si no es CREATE DATABASE o CREATE TABLE
@@ -105,7 +119,7 @@ const Consola: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          databaseName: newUUID, // Enviamos el UUID de la base de datos actual
+          databaseName: newUUID, // Usamos el UUID de la sesión actual
           sqlQuery: cleanedSQL,  // Sentencia SQL procesada
         }),
       });
