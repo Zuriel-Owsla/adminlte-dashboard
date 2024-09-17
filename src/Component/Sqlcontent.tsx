@@ -33,13 +33,33 @@ const Sqlcontent: React.FC = () => {
     setColumns(updatedColumns); // Actualizamos el estado de las columnas
   };
 
+  // Manejar la adición de nuevas columnas (Para que el sistema sea Dinamico)
+  const addNewColumn = () => {
+    const newColumn = {
+      name: '',
+      type: 'INT',
+      length: '',
+      defaultValue: 'NULL',
+      isPrimary: false,
+      isAutoIncrement: false,
+    };
+    setColumns([...columns, newColumn]); // Agregamos una nueva columna al array de columnas
+  };
+
+  // Manejar la eliminación de la última columna
+  const removeLastColumn = () => {
+    if (columns.length > 0) {
+      setColumns(columns.slice(0, -1)); // Eliminar la última columna del array
+    }
+  };
+
   return (
     <div className="card">
       <div className="card-header">
         <h3 className="card-title">Crear nueva tabla</h3>
       </div>
       <div className="card-body">
-        {/* Mostrar el formulario inicial solo si no se ha hecho clic en "Crear" */}
+        {/* Mostramos el formulario inicial solo si no se ha hecho clic en "Crear" */}
         {!showColumnConfig && (
           <CreateTableForm
             tableName={tableName}
@@ -50,7 +70,7 @@ const Sqlcontent: React.FC = () => {
           />
         )}
 
-        {/* Mostrar el formulario de configuración de columnas si ya se ha hecho clic en "Crear" */}
+        {/* Mostramos el formulario de configuración de columnas si ya se ha dado clic en "crear" */}
         {showColumnConfig && (
           <div className="mt-4">
             <h4>Configurar columnas</h4>
@@ -64,6 +84,24 @@ const Sqlcontent: React.FC = () => {
                   handleColumnChange={handleColumnChange}
                 />
               ))}
+
+              {/* boton para agregar nueva columna */}
+              <button
+                type="button"
+                className="btn btn-success mt-3 me-3"
+                onClick={addNewColumn}
+              >
+                Agregar nueva columna
+              </button>
+
+              {/* boton para quitar la última columna */}
+              <button
+                type="button"
+                className="btn btn-danger mt-3"
+                onClick={removeLastColumn}
+              >
+                Quitar última columna
+              </button>
             </form>
           </div>
         )}
