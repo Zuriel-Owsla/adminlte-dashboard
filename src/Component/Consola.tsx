@@ -6,19 +6,26 @@ const Consola: React.FC = () => {
   const [sqlCommand, setSqlCommand] = useState('');
   const [sessionUUID, setSessionUUID] = useState<string | null>(null);
 
-  // Al cargar el componente, generamos o recuperamos el UUID de local storage
+  // Al cargar el componente, generamos o recuperamos el UUID de localStorage
   useEffect(() => {
     let storedUUID = localStorage.getItem('sessionUUID');
     
-    // Si no existe un UUID en el local storag, generamos uno nuevo
     if (!storedUUID) {
       storedUUID = generarUUID();
-      localStorage.setItem('sessionUUID', storedUUID); // Guardamos el nuevo UUID en el localstorasge
+      localStorage.setItem('sessionUUID', storedUUID); 
     }
     
-    setSessionUUID(storedUUID); // Establecemos el UUID en el estado
+    setSessionUUID(storedUUID); 
     console.log(`UUID de la sesión: ${storedUUID}`);
   }, []);
+
+  // Función para regenerar el UUID manualmente
+  const regenerateUUID = () => {
+    const newUUID = generarUUID();
+    localStorage.setItem('sessionUUID', newUUID);
+    setSessionUUID(newUUID);
+    console.log(`Nuevo UUID generado manualmente: ${newUUID}`);
+  };
 
   // Función para limpiar y reemplazar el nombre de la base de datos
   const processSQL = (sql: string) => {
@@ -31,7 +38,6 @@ const Consola: React.FC = () => {
         return { cleanedSQL: null, newUUID: null };
       }
 
-      // Usamos el UUID existente en el localStorage para la base de datos
       const cleanedSQL = sql.replace(createDbRegex, `CREATE DATABASE ${sessionUUID};`);
       return { cleanedSQL, newUUID: sessionUUID };
 
@@ -41,7 +47,6 @@ const Consola: React.FC = () => {
         return { cleanedSQL: null, newUUID: null };
       }
 
-      // Procesamos la sentencia de CREATE TABLE y asignamos tipos de datos predeterminados
       const match = createTableRegex.exec(sql);
       if (!match) {
         alert('Error: Formato de CREATE TABLE no válido.');
@@ -51,46 +56,38 @@ const Consola: React.FC = () => {
       const tableName = match[1];
       let columns = match[2].split(',').map(column => column.trim());
 
-      // Almacenamos las columnas procesadas
       let processedColumns: string[] = [];
-      let foreignKeys: string[] = []; // Para almacenar las llaves foráneas
-      let columnNames: Set<string> = new Set(); // Para rastrear las columnas y evitar duplicados
+      let foreignKeys: string[] = []; 
+      let columnNames: Set<string> = new Set(); 
 
-      // Procesamos las columnas de llaves foráneas primero para asegurar que se manejen correctamente
       columns.forEach((col) => {
         const foreignKeyRegex = /FOREIGN KEY\s*\(([^)]+)\)\s*REFERENCES\s+([a-zA-Z0-9_]+)\s*\(([^)]+)\)/i;
         const foreignKeyMatch = foreignKeyRegex.exec(col);
 
         if (foreignKeyMatch) {
-          const foreignKeyColumn = foreignKeyMatch[1].trim(); // Columna que será llave foránea
-          const referencedTable = foreignKeyMatch[2].trim(); // Tabla referenciada
-          const referencedColumn = foreignKeyMatch[3].trim(); // Columna referenciada
+          const foreignKeyColumn = foreignKeyMatch[1].trim(); 
+          const referencedTable = foreignKeyMatch[2].trim(); 
+          const referencedColumn = foreignKeyMatch[3].trim(); 
 
-          // Añadimos la columna y la llave foránea solo si no se ha añadido antes
           if (!columnNames.has(foreignKeyColumn)) {
-            processedColumns.push(`${foreignKeyColumn} INT`); // Aseguramos que la columna sea INT
+            processedColumns.push(`${foreignKeyColumn} INT`); 
             foreignKeys.push(`FOREIGN KEY (${foreignKeyColumn}) REFERENCES ${referencedTable}(${referencedColumn})`);
-            columnNames.add(foreignKeyColumn); // Marcamos que esta columna ya ha sido agregada
+            columnNames.add(foreignKeyColumn); 
           }
         }
       });
 
-      // Procesamos el resto de las columnas
       columns.forEach((col, idx) => {
-        // No procesamos las columnas que ya son llaves foráneas
         if (!columnNames.has(col)) {
-          // Primera columna es la llave primaria (INT AUTO_INCREMENT)
           if (idx === 0) {
             processedColumns.push(`${col} INT AUTO_INCREMENT PRIMARY KEY`);
           } else {
-            // Para las demás columnas asumimos VARCHAR(255), excepto las llaves foráneas
             processedColumns.push(`${col} VARCHAR(255)`);
           }
-          columnNames.add(col); // Marcamos que la columna ha sido agregada
+          columnNames.add(col); 
         }
       });
 
-      // Añadimos las llaves foráneas al final de las columnas procesadas
       processedColumns = processedColumns.concat(foreignKeys);
 
       const cleanedSQL = `CREATE TABLE ${tableName} (${processedColumns.join(', ')});`;
@@ -98,7 +95,7 @@ const Consola: React.FC = () => {
       return { cleanedSQL, newUUID: sessionUUID };
     }
 
-    return { cleanedSQL: sql, newUUID: null }; // Si no es CREATE DATABASE o CREATE TABLE
+    return { cleanedSQL: sql, newUUID: null }; 
   };
 
   const handleExecute = async () => {
@@ -107,7 +104,6 @@ const Consola: React.FC = () => {
       return;
     }
 
-    // Procesamos la sentencia SQL
     const { cleanedSQL, newUUID } = processSQL(sqlCommand.trim());
 
     if (!cleanedSQL) return;
@@ -119,13 +115,13 @@ const Consola: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          databaseName: newUUID, // Usamos el UUID de la sesión actual
-          sqlQuery: cleanedSQL,  // Sentencia SQL procesada
+          databaseName: newUUID, 
+          sqlQuery: cleanedSQL,  
         }),
       });
 
-      const result = await response.json();  // Capturamos la respuesta del servidor
-      console.log(result);  // Mostramos la respuesta en la consola
+      const result = await response.json();  
+      console.log(result);  
 
       if (response.ok) {
         alert('Sentencia ejecutada con éxito.');
@@ -133,7 +129,6 @@ const Consola: React.FC = () => {
         alert(`Error: ${result.message}`);
       }
     } catch (error) {
-      // Manejamos los errores
       if (error instanceof Error) {
         console.error('Error al ejecutar la sentencia:', error.message);
         alert(`Hubo un error al ejecutar la sentencia: ${error.message}`);
@@ -147,13 +142,14 @@ const Consola: React.FC = () => {
   return (
     <div>
       <textarea
-        className="form-control custom-textarea" // CSS
+        className="form-control custom-textarea" 
         rows={10}
         placeholder="Escribe tus sentencias SQL aquí..."
         value={sqlCommand}
         onChange={(e) => setSqlCommand(e.target.value)}
       ></textarea>
-      <button className="btn btn-primary mt-3" onClick={handleExecute}>Ejecutar</button> 
+      <button className="btn btn-primary mt-3 custom-button" onClick={handleExecute}>Ejecutar</button>
+      <button className="btn btn-secondary mt-3 custom-button" onClick={regenerateUUID}>Regenerar UUID</button>
     </div>
   );
 };
