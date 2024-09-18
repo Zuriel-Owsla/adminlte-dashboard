@@ -36,8 +36,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($data['databaseName']) && !empty($data['databaseName'])) {
         $databaseName = $data['databaseName'];
     } else {
-        // Si no hay nombre de base de datos, generamos uno nuevo
-        $databaseName = generateRandomDatabaseName();
+        echo json_encode(['message' => "Error: No se proporcionó el nombre de la base de datos."]);
+        exit();
     }
 
     // Establecer conexión a MySQL
@@ -48,8 +48,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // Si la consulta es CREATE DATABASE, intentamos crear la base de datos
-    if (preg_match('/CREATE DATABASE/i', $sqlQuery)) {
+    // Comprobamos si la base de datos existe
+    $dbCheckQuery = "SHOW DATABASES LIKE '$databaseName'";
+    $dbCheckResult = $conn->query($dbCheckQuery);
+
+    if ($dbCheckResult->num_rows === 0) {
+        // Si la base de datos no existe, la creamos
         $createDbQuery = "CREATE DATABASE $databaseName";
         if ($conn->query($createDbQuery) === TRUE) {
             $responseMessages[] = "Base de datos '$databaseName' creada con éxito.";
@@ -58,33 +62,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $conn->close();
             exit();
         }
-    } else {
-        // Si la consulta es otra por ejemplo CREATE TABLE, seleccionamos la base de datos y ejecutamos la consulta
-        $conn->select_db($databaseName);
+    }
 
-        // Ejecutar la consulta SQL (ejemplo: CREATE TABLE)
-        if ($conn->multi_query($sqlQuery)) {
-            do {
-                // Almacenamos el primer conjunto de resultados
-                if ($result = $conn->store_result()) {
-                    while ($row = $result->fetch_assoc()) {
-                        // Manejamos el resultado si es necesario
-                    }
-                    $result->free();
+    // Seleccionar la base de datos para ejecutar el CREATE TABLE
+    if (!$conn->select_db($databaseName)) {
+        echo json_encode(['message' => "Error: No se pudo seleccionar la base de datos '$databaseName'."]);
+        $conn->close();
+        exit();
+    }
+
+    // Ejecutar la consulta SQL (ejemplo: CREATE TABLE)
+    if ($conn->multi_query($sqlQuery)) {
+        do {
+            if ($result = $conn->store_result()) {
+                while ($row = $result->fetch_assoc()) {
                 }
-                // Verificamos errores
-                if ($conn->errno) {
-                    echo json_encode(['message' => "Error al ejecutar la consulta: " . $conn->error]);
-                    $conn->close();
-                    exit();
-                }
-            } while ($conn->more_results() && $conn->next_result());
-            $responseMessages[] = "Consultas SQL ejecutadas con éxito.";
-        } else {
-            echo json_encode(['message' => "Error al ejecutar las consultas: " . $conn->error]);
-            $conn->close();
-            exit();
-        }
+                $result->free();
+            }
+
+            if ($conn->errno) {
+                echo json_encode(['message' => "Error al ejecutar la consulta: " . $conn->error]);
+                $conn->close();
+                exit();
+            }
+        } while ($conn->more_results() && $conn->next_result());
+
+        $responseMessages[] = "Consultas SQL ejecutadas con éxito.";
+    } else {
+        echo json_encode(['message' => "Error al ejecutar las consultas: " . $conn->error]);
+        $conn->close();
+        exit();
     }
 
     // Cerrar la conexión
