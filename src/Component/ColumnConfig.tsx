@@ -3,15 +3,17 @@ import React from 'react';
 interface ColumnConfigProps {
   index: number;
   column: any;
-  dataTypes: string[];
   handleColumnChange: (index: number, key: string, value: any) => void;
 }
 
-const ColumnConfig: React.FC<ColumnConfigProps> = ({ index, column, dataTypes, handleColumnChange }) => {
+const ColumnConfig: React.FC<ColumnConfigProps> = ({ index, column, handleColumnChange }) => {
+  // Definir tipos de datos 
+  const dataTypes = ['Texto', 'Número', 'Fecha', 'Fecha y Hora'];
+
   return (
     <div className="row mb-3">
       {/* Nombre de la columna */}
-      <div className="col-md-2">
+      <div className="col-md-4">
         <input
           type="text"
           className="form-control"
@@ -22,7 +24,7 @@ const ColumnConfig: React.FC<ColumnConfigProps> = ({ index, column, dataTypes, h
       </div>
 
       {/* Tipo de dato */}
-      <div className="col-md-2">
+      <div className="col-md-4">
         <select
           className="form-control"
           value={column.type}
@@ -36,52 +38,16 @@ const ColumnConfig: React.FC<ColumnConfigProps> = ({ index, column, dataTypes, h
         </select>
       </div>
 
-      {/* Longitud */}
-      <div className="col-md-2">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Longitud"
-          value={column.length}
-          onChange={(e) => handleColumnChange(index, 'length', e.target.value)}
-        />
-      </div>
-
-      {/* Valor por defecto */}
-      <div className="col-md-2">
-        <select
-          className="form-control"
-          value={column.defaultValue}
-          onChange={(e) => handleColumnChange(index, 'defaultValue', e.target.value)}
-        >
-          <option value="NULL">NULL</option>
-          <option value="CURRENT_TIMESTAMP">CURRENT_TIMESTAMP</option>
-        </select>
-      </div>
-
-      {/* Checkbox para llave primaria */}
-      <div className="col-md-2">
+      {/* Checkbox para null */}
+      <div className="col-md-4">
         <div className="form-check">
           <input
             type="checkbox"
             className="form-check-input"
-            checked={column.isPrimary}
-            onChange={(e) => handleColumnChange(index, 'isPrimary', e.target.checked)}
+            checked={column.isNullable}
+            onChange={(e) => handleColumnChange(index, 'isNullable', e.target.checked)}
           />
-          <label className="form-check-label">Primaria</label>
-        </div>
-      </div>
-
-      {/* Checkbox para auto-increment */}
-      <div className="col-md-2">
-        <div className="form-check">
-          <input
-            type="checkbox"
-            className="form-check-input"
-            checked={column.isAutoIncrement}
-            onChange={(e) => handleColumnChange(index, 'isAutoIncrement', e.target.checked)}
-          />
-          <label className="form-check-label">Auto-increment</label>
+          <label className="form-check-label">Nulo</label>
         </div>
       </div>
     </div>
