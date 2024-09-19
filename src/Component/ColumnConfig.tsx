@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface ColumnConfigProps {
   index: number;
@@ -6,8 +6,32 @@ interface ColumnConfigProps {
   handleColumnChange: (index: number, key: string, value: any) => void;
 }
 
-const ColumnConfig: React.FC<ColumnConfigProps> = ({ index, column, handleColumnChange }) => {
-  // Definir tipos de datos 
+const ColumnConfig: React.FC<ColumnConfigProps> = ({
+  index,
+  column,
+  handleColumnChange,
+}) => {
+  const [hasError, setHasError] = useState(false); // Para manejar la validación
+
+  useEffect(() => {
+    // Validar cuando el componente se monta o actualiza
+    if (!column.name) {
+      setHasError(true);
+    } else {
+      setHasError(false);
+    }
+  }, [column.name]);
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    if (!newValue) {
+      setHasError(true); // Mostrar error si el nombre está vacío
+    } else {
+      setHasError(false); // Quitar error si se introduce un nombre
+    }
+    handleColumnChange(index, 'name', newValue);
+  };
+
   const dataTypes = ['Texto', 'Número', 'Fecha', 'Fecha y Hora'];
 
   return (
@@ -16,11 +40,16 @@ const ColumnConfig: React.FC<ColumnConfigProps> = ({ index, column, handleColumn
       <div className="col-md-4">
         <input
           type="text"
-          className="form-control"
-          placeholder="Nombre"
+          className={`form-control ${hasError ? 'is-invalid' : ''}`} // Aplicar estilo de error
+          placeholder="Nombre de la columna"
           value={column.name}
-          onChange={(e) => handleColumnChange(index, 'name', e.target.value)}
+          onChange={handleNameChange} // Validar nombre de la columna
         />
+        {hasError && (
+          <div className="invalid-feedback">
+            Por favor, ingrese un nombre para la columna.
+          </div>
+        )}
       </div>
 
       {/* Tipo de dato */}

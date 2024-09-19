@@ -6,7 +6,7 @@ const Sqlcontent: React.FC = () => {
   const [tableName, setTableName] = useState('');
   const [columnCount, setColumnCount] = useState(1); // Número de columnas
   const [columns, setColumns] = useState<any[]>([]); // Array para almacenar las columnas
-  const [showColumnConfig, setShowColumnConfig] = useState(false); // Controlar la visibilidad del formulario de columnas
+  const [showColumnConfig, setShowColumnConfig] = useState(false); // controlamos la visibilidad del formulario de columnas
 
   // Manejar la creación de las columnas y ocultar el formulario inicial
   const handleCreateTable = () => {
@@ -15,18 +15,18 @@ const Sqlcontent: React.FC = () => {
       type: 'Texto', // Predeterminado a 'Texto'
       isNullable: false, // Checkbox para indicar si es null
     }));
-    setColumns(newColumns); // guardamos las columnas generadas
-    setShowColumnConfig(true); // mostramos el formulario de configuraciin de las columnas
+    setColumns(newColumns); // Guardamos las columnas generadas
+    setShowColumnConfig(true); // Mostramos el formulario de configuración de columnas
   };
 
   // Manejar el cambio de los valores de cada columna
   const handleColumnChange = (index: number, key: string, value: any) => {
     const updatedColumns = [...columns];
     updatedColumns[index][key] = value;
-    setColumns(updatedColumns); // actualizamos el estado de las columnas
+    setColumns(updatedColumns); // Actualizamos el estado de las columnas
   };
 
-  // Manejar la adición de nuevas columnas (Para que el sistema sea Dinamico)
+  // Manejar la adición de nuevas columnas (Para que el sistema sea dinámico)
   const addNewColumn = () => {
     const newColumn = {
       name: '',
@@ -50,19 +50,20 @@ const Sqlcontent: React.FC = () => {
       return null;
     }
 
-    // Iniciar la sentencia SQL
-    let sql = `CREATE TABLE ${tableName} (`;
+    let sql = `CREATE TABLE ${tableName} (`; // Iniciar la sentencia SQL
+    const columnNamesSet = new Set(); // Set para verificar duplicados en los nombres de columnas
 
-    // Set para verificar duplicados en los nombres de columnas
-    const columnNamesSet = new Set();
+    const hasEmptyColumns = columns.some((col) => !col.name);
+    if (hasEmptyColumns) {
+      return null; // Detener si hay columnas sin nombre (ya que el error se muestra en la interfaz)
+    }
 
-    // Recorrer las columnas y agregar sus nombres y tipos al SQL
     columns.forEach((col, idx) => {
       if (columnNamesSet.has(col.name)) {
         alert(`Error: La columna "${col.name}" está duplicada.`);
         return null; // Terminar la ejecución si hay duplicados
       }
-      
+
       columnNamesSet.add(col.name); // Añadir el nombre de la columna al set
 
       let sqlType = '';
@@ -73,23 +74,20 @@ const Sqlcontent: React.FC = () => {
         case 'Fecha': sqlType = 'DATE'; break;
         case 'Fecha y Hora': sqlType = 'DATETIME'; break;
         default: sqlType = 'VARCHAR(255)'; // Valor predeterminado
-      }      
+      }
 
-        // para cada columna, agregamos su nombre y tipo de dato al SQL
-        sql += `${col.name} ${sqlType}`;
+      sql += `${col.name} ${sqlType}`; // para cada columna, agregamos su nombre y tipo de dato al SQL
 
-        // Si la columna no permite valores nulos, agregamos not null
-        if (!col.isNullable) {
-          sql += ' NOT NULL';
-        }
+      if (!col.isNullable) {
+        sql += ' NOT NULL'; // Si la columna no permite valores nulos, agregamos not null
+      }
 
-        // Si no es la última columna, agregaremos una , para el SQL
-        if (idx < columns.length - 1) {
-          sql += ', ';
-        }
-      });
+      if (idx < columns.length - 1) {
+        sql += ', '; // Si no es la última columna, agregamos una coma
+      }
+    });
 
-
+    
     sql += ');'; // Cerrar la sentencia
 
     console.log(`Sentencia SQL generada: ${sql}`);
@@ -115,7 +113,7 @@ const Sqlcontent: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          databaseName: databaseUUID, 
+          databaseName: databaseUUID,
           sqlQuery: sql, // Enviar la sentencia SQL generada
         }),
       });
@@ -156,7 +154,7 @@ const Sqlcontent: React.FC = () => {
           />
         )}
 
-        {/* Mostramos el formulario de configuración de columnas si ya se ha dado clic en "crear" */}
+           {/* Mostramos el formulario de configuración de columnas si ya se ha dado clic en "crear" */}
         {showColumnConfig && (
           <div className="mt-4">
             <h4>Configurar columnas</h4>
