@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react'; 
 
 interface CreateTableFormProps {
   tableName: string;
@@ -8,19 +8,41 @@ interface CreateTableFormProps {
   handleCreateTable: () => void;
 }
 
-const CreateTableForm: React.FC<CreateTableFormProps> = ({ tableName, columnCount, setTableName, setColumnCount, handleCreateTable }) => {
+const CreateTableForm: React.FC<CreateTableFormProps> = ({
+  tableName,
+  columnCount,
+  setTableName,
+  setColumnCount,
+  handleCreateTable,
+}) => {
+  const [hasError, setHasError] = useState(false); // Para manejar la validación
+
+  const handleCreateClick = () => {
+    if (!tableName) {
+      setHasError(true); // Mostrar error si el nombre de la tabla está vacío
+    } else {
+      setHasError(false);
+      handleCreateTable(); // Continuar con la creación si hay nombre
+    }
+  };
+
   return (
-    <form>
+    <div>
       <div className="form-group">
         <label htmlFor="tableName">Nombre de la tabla</label>
         <input
           type="text"
-          className="form-control"
+          className={`form-control ${hasError ? 'is-invalid' : ''}`} // aplicamos estilo de error si esta vacip
           id="tableName"
-          placeholder="Ingrese el nombre de la tabla"
+          placeholder="Ingresa el nombre de la tabla"
           value={tableName}
           onChange={(e) => setTableName(e.target.value)}
         />
+        {hasError && (
+          <div className="invalid-feedback">
+            Favor de poner un nombre a la tabla.
+          </div>
+        )}
       </div>
 
       <div className="form-group">
@@ -29,20 +51,20 @@ const CreateTableForm: React.FC<CreateTableFormProps> = ({ tableName, columnCoun
           type="number"
           className="form-control"
           id="columnCount"
-          min="1"
           value={columnCount}
-          onChange={(e) => setColumnCount(parseInt(e.target.value))}
+          min={1}
+          onChange={(e) => setColumnCount(parseInt(e.target.value, 10))}
         />
       </div>
 
       <button
         type="button"
         className="btn btn-primary mt-3"
-        onClick={handleCreateTable}
+        onClick={handleCreateClick} // Llamar a la función con validación
       >
         Crear
       </button>
-    </form>
+    </div>
   );
 };
 
