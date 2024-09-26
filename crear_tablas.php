@@ -53,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $dbCheckResult = $conn->query($dbCheckQuery);
 
     if ($dbCheckResult->num_rows === 0) {
-        // Si la base de datos no existe, la creamos s
+        // Si la base de datos no existe, la creamos 
         $createDbQuery = "CREATE DATABASE $databaseName";
         if ($conn->query($createDbQuery) === TRUE) {
             $responseMessages[] = "Base de datos '$databaseName' creada con éxito.";
