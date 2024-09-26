@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit(0);
 }
 
-// Datos de conexión a MySQL
+// Datos de conexión a mysql
 $servername = "localhost";
 $username = "root";
 $password = "";
@@ -53,10 +53,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $dbCheckResult = $conn->query($dbCheckQuery);
 
     if ($dbCheckResult->num_rows === 0) {
-        // Si la base de datos no existe, la creamos 
-        $createDbQuery = "CREATE DATABASE $databaseName";
+        // Si la base de datos no existe, la creamos
+        $createDbQuery = "CREATE DATABASE `$databaseName`";
         if ($conn->query($createDbQuery) === TRUE) {
             $responseMessages[] = "Base de datos '$databaseName' creada con éxito.";
+            // Cerrar la conexión y reabrirla 
+            $conn->close();
+            $conn = new mysqli($servername, $username, $password);
+            if ($conn->connect_error) {
+                echo json_encode(['message' => "Error al reconectar a MySQL: " . $conn->connect_error]);
+                exit();
+            }
         } else {
             echo json_encode(['message' => "Error al crear la base de datos: " . $conn->error]);
             $conn->close();
@@ -76,6 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         do {
             if ($result = $conn->store_result()) {
                 while ($row = $result->fetch_assoc()) {
+                    // Proceso de los resultados si es necesario
                 }
                 $result->free();
             }
@@ -105,3 +113,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 } else {
     echo json_encode(['message' => "Método no soportado. Utiliza POST para enviar la sentencia SQL."]);
 }
+?>
