@@ -6,20 +6,16 @@ const Consola: React.FC = () => {
   const [sqlCommand, setSqlCommand] = useState('');
   const [sessionUUID, setSessionUUID] = useState<string | null>(null);
 
-  // Al cargar el componente, generamos o recuperamos el UUID de localStorage
   useEffect(() => {
     let storedUUID = localStorage.getItem('sessionUUID');
-    
     if (!storedUUID) {
       storedUUID = generarUUID();
       localStorage.setItem('sessionUUID', storedUUID); 
     }
-    
     setSessionUUID(storedUUID); 
     console.log(`UUID de la sesión: ${storedUUID}`);
   }, []);
 
-  // Función para regenerar el UUID manualmente
   const regenerateUUID = () => {
     const newUUID = generarUUID();
     localStorage.setItem('sessionUUID', newUUID);
@@ -27,75 +23,83 @@ const Consola: React.FC = () => {
     console.log(`Nuevo UUID generado manualmente: ${newUUID}`);
   };
 
-  // Función para limpiar y reemplazar el nombre de la base de datos
   const processSQL = (sql: string) => {
     const createDbRegex = /CREATE DATABASE\s+([a-zA-Z0-9_]+);?/i;
-    const createTableRegex = /CREATE TABLE\s+([a-zA-Z0-9_]+)\s*\((.+)\);?/i;
+    const createTableRegex = /CREATE TABLE\s+([a-zA-Z0-9_]+)\s*\(([\s\S]+?)\);/gi;
+
+    let modifiedSQL = sql;
+    const cleanedSQLs: string[] = [];
 
     if (createDbRegex.test(sql)) {
       if (!sessionUUID) {
         alert('Error: No se ha generado un UUID para la sesión.');
-        return { cleanedSQL: null, newUUID: null };
+        return null;
       }
 
-      const cleanedSQL = sql.replace(createDbRegex, `CREATE DATABASE ${sessionUUID};`);
-      return { cleanedSQL, newUUID: sessionUUID };
+      modifiedSQL = sql.replace(createDbRegex, `CREATE DATABASE ${sessionUUID};`);
+      cleanedSQLs.push(modifiedSQL);
+      return cleanedSQLs;
 
-    } else if (createTableRegex.test(sql)) {
-      if (!sessionUUID) {
-        alert('Error: No se ha generado un UUID para la sesión.');
-        return { cleanedSQL: null, newUUID: null };
-      }
+    } else {
+      let match;
+      while ((match = createTableRegex.exec(sql)) !== null) {
+        const tableName = match[1];
+        let columns = match[2].split(',').map(column => column.trim());
 
-      const match = createTableRegex.exec(sql);
-      if (!match) {
-        alert('Error: Formato de CREATE TABLE no válido.');
-        return { cleanedSQL: null, newUUID: null };
-      }
+        let processedColumns: string[] = [];
+        let primaryKeyColumn: string | null = null;
+        let foreignKeys: string[] = [];
+        let autoIncrementDetected = false;
 
-      const tableName = match[1];
-      let columns = match[2].split(',').map(column => column.trim());
+        columns.forEach((col) => {
+          const columnRegex = /([a-zA-Z0-9_]+)\s+([a-zA-Z]+(?:\(\d+\))?)(\s+NOT\s+NULL)?(\s+PRIMARY\s+KEY)?(\s+AUTO_INCREMENT)?/i;
+          const foreignKeyRegex = /FOREIGN KEY\s*\(([^)]+)\)\s*REFERENCES\s+([a-zA-Z0-9_]+)\s*\(([^)]+)\)/i;
+          
+          const columnMatch = columnRegex.exec(col);
+          const foreignKeyMatch = foreignKeyRegex.exec(col);
 
-      let processedColumns: string[] = [];
-      let foreignKeys: string[] = []; 
-      let columnNames: Set<string> = new Set(); 
+          if (foreignKeyMatch) {
+            const foreignKeyColumn = foreignKeyMatch[1].trim();
+            const referencedTable = foreignKeyMatch[2].trim();
+            const referencedColumn = foreignKeyMatch[3].trim();
 
-      columns.forEach((col) => {
-        const foreignKeyRegex = /FOREIGN KEY\s*\(([^)]+)\)\s*REFERENCES\s+([a-zA-Z0-9_]+)\s*\(([^)]+)\)/i;
-        const foreignKeyMatch = foreignKeyRegex.exec(col);
-
-        if (foreignKeyMatch) {
-          const foreignKeyColumn = foreignKeyMatch[1].trim(); 
-          const referencedTable = foreignKeyMatch[2].trim(); 
-          const referencedColumn = foreignKeyMatch[3].trim(); 
-
-          if (!columnNames.has(foreignKeyColumn)) {
-            processedColumns.push(`${foreignKeyColumn} INT`); 
             foreignKeys.push(`FOREIGN KEY (${foreignKeyColumn}) REFERENCES ${referencedTable}(${referencedColumn})`);
-            columnNames.add(foreignKeyColumn); 
+          } else if (columnMatch) {
+            const columnName = columnMatch[1];
+            const columnType = columnMatch[2];
+            const notNull = columnMatch[3] ? 'NOT NULL' : '';
+            const primaryKey = columnMatch[4] ? 'PRIMARY KEY' : '';
+            const autoIncrement = columnMatch[5] ? 'AUTO_INCREMENT' : '';
+
+            let columnDefinition = `${columnName} ${columnType} ${notNull}`;
+
+            // Si hay increment, lo marcamos y nos aseguramos de que sea llave primria
+            if (autoIncrement) {
+              autoIncrementDetected = true;
+              columnDefinition += ' AUTO_INCREMENT PRIMARY KEY';
+            } else if (primaryKey) {
+              primaryKeyColumn = columnName;
+            }
+
+            processedColumns.push(columnDefinition.trim());
           }
+        });
+
+        // Si hay una llave primaria sin increment, lo agregamos al final
+        if (!autoIncrementDetected && primaryKeyColumn) {
+          processedColumns.push(`PRIMARY KEY (${primaryKeyColumn})`);
         }
-      });
 
-      columns.forEach((col, idx) => {
-        if (!columnNames.has(col)) {
-          if (idx === 0) {
-            processedColumns.push(`${col} INT AUTO_INCREMENT PRIMARY KEY`);
-          } else {
-            processedColumns.push(`${col} VARCHAR(255)`);
-          }
-          columnNames.add(col); 
-        }
-      });
+        // Añadimos las claves foráneas al final
+        processedColumns = processedColumns.concat(foreignKeys);
 
-      processedColumns = processedColumns.concat(foreignKeys);
+        const cleanedSQL = `CREATE TABLE ${tableName} (${processedColumns.join(', ')});`;
+        cleanedSQLs.push(cleanedSQL);
+      }
 
-      const cleanedSQL = `CREATE TABLE ${tableName} (${processedColumns.join(', ')});`;
-      console.log(`Sentencia SQL modificada: ${cleanedSQL}`);
-      return { cleanedSQL, newUUID: sessionUUID };
+      console.log(`Sentencias SQL generadas: ${cleanedSQLs.join('\n')}`);
+      return cleanedSQLs;
     }
-
-    return { cleanedSQL: sql, newUUID: null }; 
   };
 
   const handleExecute = async () => {
@@ -104,30 +108,33 @@ const Consola: React.FC = () => {
       return;
     }
 
-    const { cleanedSQL, newUUID } = processSQL(sqlCommand.trim());
+    const cleanedSQLs = processSQL(sqlCommand.trim());
 
-    if (!cleanedSQL) return;
+    if (!cleanedSQLs) return;
 
     try {
-      const response = await fetch('http://localhost/crear_tablas.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          databaseName: newUUID, 
-          sqlQuery: cleanedSQL,  
-        }),
-      });
+      for (const cleanedSQL of cleanedSQLs) {
+        const response = await fetch('http://localhost/crear_tablas.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            databaseName: sessionUUID,
+            sqlQuery: cleanedSQL,
+          }),
+        });
 
-      const result = await response.json();  
-      console.log(result);  
+        const result = await response.json();
+        console.log(result);
 
-      if (response.ok) {
-        alert('Sentencia ejecutada con éxito.');
-      } else {
-        alert(`Error: ${result.message}`);
+        if (!response.ok) {
+          alert(`Error: ${result.message}`);
+          break;
+        }
       }
+
+      alert('Sentencias SQL ejecutadas con éxito.');
     } catch (error) {
       if (error instanceof Error) {
         console.error('Error al ejecutar la sentencia:', error.message);
@@ -142,7 +149,7 @@ const Consola: React.FC = () => {
   return (
     <div>
       <textarea
-        className="form-control custom-textarea" 
+        className="form-control custom-textarea"
         rows={10}
         placeholder="Escribe tus sentencias SQL aquí..."
         value={sqlCommand}
