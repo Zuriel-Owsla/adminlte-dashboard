@@ -6,7 +6,8 @@ const Sqlcontent: React.FC = () => {
   const [tableName, setTableName] = useState('');
   const [columnCount, setColumnCount] = useState(1); // Número de columnas
   const [columns, setColumns] = useState<any[]>([]); // Array para almacenar las columnas
-  const [showColumnConfig, setShowColumnConfig] = useState(false); // controlamos la visibilidad del formulario de columnas
+  const [showColumnConfig, setShowColumnConfig] = useState(false); // Controlar la visibilidad del formulario de columnas
+  const [formFilled, setFormFilled] = useState(false); // Verificar si el formulario de columnas está configurado
 
   // Manejar la creación de las columnas y ocultar el formulario inicial
   const handleCreateTable = () => {
@@ -24,6 +25,10 @@ const Sqlcontent: React.FC = () => {
     const updatedColumns = [...columns];
     updatedColumns[index][key] = value;
     setColumns(updatedColumns); // Actualizamos el estado de las columnas
+
+    // Verificamos si alguna columna tiene datos ingresados
+    const isFormFilled = updatedColumns.some(col => col.name || col.type !== 'Texto' || col.isNullable);
+    setFormFilled(isFormFilled);
   };
 
   // Manejar la adición de nuevas columnas (Para que el sistema sea dinámico)
@@ -76,7 +81,7 @@ const Sqlcontent: React.FC = () => {
         default: sqlType = 'VARCHAR(255)'; // Valor predeterminado
       }
 
-      sql += `${col.name} ${sqlType}`; // para cada columna, agregamos su nombre y tipo de dato al SQL
+      sql += `${col.name} ${sqlType}`; // Para cada columna, agregamos su nombre y tipo de dato al SQL
 
       if (!col.isNullable) {
         sql += ' NOT NULL'; // Si la columna no permite valores nulos, agregamos not null
@@ -87,19 +92,18 @@ const Sqlcontent: React.FC = () => {
       }
     });
 
-    
     sql += ');'; // Cerrar la sentencia
 
     console.log(`Sentencia SQL generada: ${sql}`);
     return sql;
   };
 
-  // función para enviar la sentencia SQL al backend
+  // Función para enviar la sentencia SQL al backend
   const handleSubmit = async () => {
     const sql = generateSQL();
     if (!sql) return;
 
-    // obtenemos el UUID de la base de datos del localStorage
+    // Obtenemos el UUID de la base de datos del localStorage
     const databaseUUID = localStorage.getItem('sessionUUID');
     if (!databaseUUID) {
       alert('Error: No se encontró el UUID de la base de datos.');
@@ -137,13 +141,28 @@ const Sqlcontent: React.FC = () => {
     }
   };
 
+  // Función para crear una nueva tabla y reiniciar los formularios
+  const handleNewTable = () => {
+    if (formFilled) {
+      const confirmReset = window.confirm('¿Seguro que quieres crear una nueva tabla? Tu configuración actual se perderá.');
+      if (!confirmReset) return;
+    }
+
+    // Restablecemos el estado para iniciar una nueva tabla
+    setTableName('');
+    setColumnCount(1);
+    setColumns([]);
+    setShowColumnConfig(false);
+    setFormFilled(false); // Reiniciamos el estado de las columnas configuradas
+  };
+
   return (
     <div className="card">
       <div className="card-header">
         <h3 className="card-title">Crear nueva tabla</h3>
       </div>
       <div className="card-body">
-        {/* Mostramos el formulario inicial solo si no se ha hecho clic en "Crear" */}
+        {/* Mostrar el formulario inicial solo si no se ha hecho clic en "Crear" */}
         {!showColumnConfig && (
           <CreateTableForm
             tableName={tableName}
@@ -154,7 +173,7 @@ const Sqlcontent: React.FC = () => {
           />
         )}
 
-           {/* Mostramos el formulario de configuración de columnas si ya se ha dado clic en "crear" */}
+        {/* Mostrar el formulario de configuración de columnas si ya se ha dado clic en "Crear" */}
         {showColumnConfig && (
           <div className="mt-4">
             <h4>Configurar columnas</h4>
@@ -193,6 +212,15 @@ const Sqlcontent: React.FC = () => {
                 onClick={handleSubmit}
               >
                 Crear Tabla
+              </button>
+
+              {/* Botón para crear una nueva tabla (reiniciar formularios) */}
+              <button
+                type="button"
+                className="btn btn-warning mt-3 ms-3"
+                onClick={handleNewTable}
+              >
+                Crear nueva tabla
               </button>
             </form>
           </div>
