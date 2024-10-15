@@ -4,7 +4,7 @@ import TableroContent from './TableroContent';
 import Sqlcontent from './Sqlcontent';
 
 const Dashboard: React.FC = () => {
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'terminal' | 'sql'>('dashboard'); // Añadimos 'sql' como opción
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'terminal' | 'sql' | 'relaciones'>('dashboard');
 
   return (
     <div className="wrapper">
@@ -29,21 +29,29 @@ const Dashboard: React.FC = () => {
               <li className="nav-item">
                 <a href="#"
                   className={`nav-link ${activeSection === 'terminal' ? 'active' : ''}`}
-                  onClick={() => setActiveSection('terminal')} // Cambiamos a Terminal
-                >
+                  onClick={() => setActiveSection('terminal')}>
                   <i className="nav-icon fas fa-terminal"></i>
                   <p>Terminal</p>
                 </a>
               </li>
 
-              {/* Opción del SQL */}
+              {/* Opción SQL */}
               <li className="nav-item">
                 <a href="#"
                   className={`nav-link ${activeSection === 'sql' ? 'active' : ''}`}
-                  onClick={() => setActiveSection('sql')} // Cambiamos a SQL
-                >
+                  onClick={() => setActiveSection('sql')}>
                   <i className="nav-icon fas fa-database"></i>
                   <p>SQL</p>
+                </a>
+              </li>
+
+              {/* Nueva opción para gestionar Relaciones */}
+              <li className="nav-item">
+                <a href="#"
+                  className={`nav-link ${activeSection === 'relaciones' ? 'active' : ''}`}
+                  onClick={() => setActiveSection('relaciones')}>
+                  <i className="nav-icon fas fa-link"></i>
+                  <p>Relaciones</p>
                 </a>
               </li>
             </ul>
@@ -57,7 +65,7 @@ const Dashboard: React.FC = () => {
           <div className="container-fluid">
             <div className="row mb-2">
               <div className="col-sm-6">
-                <h1>{activeSection === 'dashboard' ? 'Tablero' : activeSection === 'terminal' ? 'Terminal' : 'SQL'}</h1>
+                <h1>{activeSection === 'dashboard' ? 'Tablero' : activeSection === 'terminal' ? 'Terminal' : activeSection === 'sql' ? 'SQL' : 'Relaciones'}</h1>
               </div>
             </div>
           </div>
@@ -65,14 +73,11 @@ const Dashboard: React.FC = () => {
 
         <section className="content">
           <div className="container-fluid">
-            {/* Renderizado condicional del contenido basado en el estado activo */}
-            {activeSection === 'dashboard' ? (
-              <TableroContent />  // Renderizamos el contenido del tablero
-            ) : activeSection === 'terminal' ? (
-              <Consola /> // Renderizamos el terminal
-            ) : (
-              <Sqlcontent /> // Renderizamos el nuevo contenido SQL
-            )}
+            {/* Renderizado condicional del contenido basado en la sección activa */}
+            {activeSection === 'dashboard' && <TableroContent />}
+            {activeSection === 'terminal' && <Consola />}
+            {activeSection === 'sql' && <Sqlcontent />}
+            {activeSection === 'relaciones' && <RelacionesContent />} {/* aqui pondre el nuevo componente */}
           </div>
         </section>
       </div>
