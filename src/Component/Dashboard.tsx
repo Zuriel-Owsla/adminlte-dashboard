@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Consola from './Consola'; 
 import TableroContent from './TableroContent';
 import Sqlcontent from './Sqlcontent';
+import RelacionesContent from './RelacionesContent'; 
 
 const Dashboard: React.FC = () => {
   const [activeSection, setActiveSection] = useState<'dashboard' | 'terminal' | 'sql' | 'relaciones'>('dashboard');
