@@ -24,3 +24,13 @@
   .custom-button {
     margin-right: 10px;
   }
+
+  /* relaciones*/
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  margin-top: 20px;
+}
