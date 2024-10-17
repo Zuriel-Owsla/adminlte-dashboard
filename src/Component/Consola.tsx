@@ -115,7 +115,7 @@ const Consola: React.FC = () => {
 
     try {
       for (const cleanedSQL of cleanedSQLs) {
-        const response = await fetch(`${config.apiBaseUrl}`, { // Usamos la URL del archivo de configuración
+        const response = await fetch(`${config.apiBaseUrl}`, { // usamos la url del archivo de configuración
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
