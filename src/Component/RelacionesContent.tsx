@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import config from '../config'; 
 
 const RelacionesContent: React.FC = () => {
   const [tablas, setTablas] = useState<string[]>([]); // aquí se guardarán las tablas de la BD
   const [tablaSeleccionada, setTablaSeleccionada] = useState(''); // tabla seleccionada por el usuario
   const [columnas, setColumnas] = useState<string[]>([]); // columnas de la tabla seleccionada
-  const [columnaRelacionada, setColumnaRelacionada] = useState(''); // columna seleccionada para la relación
+  const [columnaRelacionada, setColumnaRelacionada] = useState(''); // Columna seleccionada para la relación
   const [tablaForanea, setTablaForanea] = useState(''); // Tabla a la cual se relacionará
   const [columnasForanea, setColumnasForanea] = useState<string[]>([]); // Columnas de la tabla foránea
   const [columnaForanea, setColumnaForanea] = useState(''); // Columna seleccionada de la tabla foránea
@@ -17,7 +18,7 @@ const RelacionesContent: React.FC = () => {
   useEffect(() => {
     if (sessionUUID) {
       // obtener las tablas de la base de datos con el UUID actual
-      fetch('http://localhost/crear_tablas.php', {
+      fetch(`${config.apiBaseUrl}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -46,7 +47,7 @@ const RelacionesContent: React.FC = () => {
   const handleTablaChange = (tabla: string) => {
     setTablaSeleccionada(tabla);
     if (sessionUUID && tabla) {
-      fetch('http://localhost/crear_tablas.php', {
+      fetch(`${config.apiBaseUrl}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -60,7 +61,7 @@ const RelacionesContent: React.FC = () => {
         .then((response) => response.json())
         .then((data) => {
           if (data.columns) {
-            setColumnas(data.columns); // establecemos las columnas de la tabla
+            setColumnas(data.columns); // Establecemos las columnas de la tabla
           } else {
             setError('Error al obtener las columnas.');
           }
@@ -72,11 +73,11 @@ const RelacionesContent: React.FC = () => {
     }
   };
 
-  // obtener columnas de la tabla foránea seleccionada
+  // bbtenemos las columnas de la tabla foránea seleccionada
   const handleTablaForaneaChange = (tabla: string) => {
     setTablaForanea(tabla);
     if (sessionUUID && tabla) {
-      fetch('http://localhost/crear_tablas.php', {
+      fetch(`${config.apiBaseUrl}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -206,14 +207,14 @@ const RelacionesContent: React.FC = () => {
           </div>
         )}
 
-        {/* boton para crear relación */}
+        {/* botón para crear relación */}
         {tablaForanea && columnaForanea && (
           <button className="btn btn-primary" onClick={handleCrearRelacion}>
             Crear Relación
           </button>
         )}
 
-        {/* mensje de confirmación */}
+        {/* mensaje de confirmación */}
         {mensajeConfirmacion && (
           <div className="alert alert-success mt-3">{mensajeConfirmacion}</div>
         )}
