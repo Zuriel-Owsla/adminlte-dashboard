@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { generarUUID } from './generadorUUID'; 
+import { generarUUID } from './generadorUUID';
 import '../estilos.css';
+import config from '../config'; // Importar el archivo de configuración
 
 const Consola: React.FC = () => {
   const [sqlCommand, setSqlCommand] = useState('');
@@ -73,7 +74,7 @@ const Consola: React.FC = () => {
 
             let columnDefinition = `${columnName} ${columnType} ${notNull}`;
 
-            // Si hay increment, lo marcamos y nos aseguramos de que sea llave primria
+            // Si hay AUTO_INCREMENT, lo marcamos y aseguramos que sea llave primaria
             if (autoIncrement) {
               autoIncrementDetected = true;
               columnDefinition += ' AUTO_INCREMENT PRIMARY KEY';
@@ -85,7 +86,7 @@ const Consola: React.FC = () => {
           }
         });
 
-        // Si hay una llave primaria sin increment, lo agregamos al final
+        // Si hay una llave primaria sin AUTO_INCREMENT, lo agregamos al final
         if (!autoIncrementDetected && primaryKeyColumn) {
           processedColumns.push(`PRIMARY KEY (${primaryKeyColumn})`);
         }
@@ -114,7 +115,7 @@ const Consola: React.FC = () => {
 
     try {
       for (const cleanedSQL of cleanedSQLs) {
-        const response = await fetch('http://localhost/crear_tablas.php', {
+        const response = await fetch(`${config.apiBaseUrl}`, { // Usamos la URL del archivo de configuración
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
