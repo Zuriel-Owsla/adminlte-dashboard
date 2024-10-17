@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import CreateTableForm from './CreateTableForm';
 import ColumnConfig from './ColumnConfig';
+import config from '../config'; // Importar archivo de configuración
 
 const Sqlcontent: React.FC = () => {
   const [tableName, setTableName] = useState('');
@@ -111,7 +112,7 @@ const Sqlcontent: React.FC = () => {
     }
 
     try {
-      const response = await fetch('http://localhost/crear_tablas.php', {
+      const response = await fetch(`${config.apiBaseUrl}`, { // Correcion API de Fetch 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
