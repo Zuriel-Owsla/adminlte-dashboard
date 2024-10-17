@@ -176,3 +176,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     echo json_encode(['message' => "Método no soportado. Utiliza POST para enviar la sentencia SQL."]);
 }
 ?>
+        
