@@ -1,77 +1,97 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CreateTableForm from './CreateTableForm';
 import ColumnConfig from './ColumnConfig';
-import config from '../config'; // Importar archivo de configuración
+import config from '../config';
 
 const Sqlcontent: React.FC = () => {
   const [tableName, setTableName] = useState('');
-  const [columnCount, setColumnCount] = useState(1); // Número de columnas
-  const [columns, setColumns] = useState<any[]>([]); // Array para almacenar las columnas
-  const [showColumnConfig, setShowColumnConfig] = useState(false); // Controlar la visibilidad del formulario de columnas
-  const [formFilled, setFormFilled] = useState(false); // Verificar si el formulario de columnas está configurado
+  const [columnCount, setColumnCount] = useState(1);
+  const [columns, setColumns] = useState<any[]>([]);
+  const [showColumnConfig, setShowColumnConfig] = useState(false);
+  const [formFilled, setFormFilled] = useState(false);
+  const [foreignTables, setForeignTables] = useState<string[]>([]); // Para las tablas relacionadas
 
-  // Manejar la creación de las columnas y ocultar el formulario inicial
+  // Manejar la creación de columnas y cargar tablas para llaves foráneas
   const handleCreateTable = () => {
     const newColumns = Array.from({ length: columnCount }, () => ({
       name: '',
-      type: 'Texto', // Predeterminado a 'Texto'
-      isNullable: false, // Checkbox para indicar si es null
+      type: 'Texto',
+      isNullable: false,
+      isPrimaryKey: false,
+      isUnique: false,
+      isForeignKey: false,
+      relatedTable: '',
+      relatedColumn: '',
+      onDelete: 'RESTRICT',
+      onUpdate: 'RESTRICT',
     }));
-    setColumns(newColumns); // Guardamos las columnas generadas
-    setShowColumnConfig(true); // Mostramos el formulario de configuración de columnas
+    setColumns(newColumns);
+    setShowColumnConfig(true);
+
+    // Cargar las tablas para llaves foráneas
+    fetch(`${config.apiBaseUrl}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'listTables', databaseName: localStorage.getItem('sessionUUID') }),
+    })
+      .then((response) => response.json())
+      .then((data) => setForeignTables(data.tables))
+      .catch((error) => console.error('Error al obtener tablas:', error));
   };
 
   // Manejar el cambio de los valores de cada columna
   const handleColumnChange = (index: number, key: string, value: any) => {
     const updatedColumns = [...columns];
     updatedColumns[index][key] = value;
-    setColumns(updatedColumns); // Actualizamos el estado de las columnas
+    setColumns(updatedColumns);
 
-    // Verificamos si alguna columna tiene datos ingresados
+    // Verificar si el formulario está configurado
     const isFormFilled = updatedColumns.some(col => col.name || col.type !== 'Texto' || col.isNullable);
     setFormFilled(isFormFilled);
   };
 
-  // Manejar la adición de nuevas columnas (Para que el sistema sea dinámico)
+  // Añadir una nueva columna
   const addNewColumn = () => {
     const newColumn = {
       name: '',
-      type: 'Texto', // Predeterminado a 'Texto'
+      type: 'Texto',
       isNullable: false,
+      isPrimaryKey: false,
+      isUnique: false,
+      isForeignKey: false,
+      relatedTable: '',
+      relatedColumn: '',
+      onDelete: 'RESTRICT',
+      onUpdate: 'RESTRICT',
     };
-    setColumns([...columns, newColumn]); // Agregamos una nueva columna al array de columnas
+    setColumns([...columns, newColumn]);
   };
 
-  // Manejar la eliminación de la última columna
+  // Eliminar la última columna
   const removeLastColumn = () => {
     if (columns.length > 0) {
-      setColumns(columns.slice(0, -1)); // Eliminar la última columna del array
+      setColumns(columns.slice(0, -1));
     }
   };
 
-  // Función para generar el SQL para crear la tabla
+  // Generar la sentencia SQL
   const generateSQL = () => {
     if (!tableName || columns.length === 0) {
       alert('Por favor, ingrese un nombre de tabla y al menos una columna.');
       return null;
     }
 
-    let sql = `CREATE TABLE ${tableName} (`; // Iniciar la sentencia SQL
-    const columnNamesSet = new Set(); // Set para verificar duplicados en los nombres de columnas
-
-    const hasEmptyColumns = columns.some((col) => !col.name);
-    if (hasEmptyColumns) {
-      return null; // Detener si hay columnas sin nombre (ya que el error se muestra en la interfaz)
-    }
+    let sql = `CREATE TABLE ${tableName} (`;
+    const columnNamesSet = new Set();
+    const foreignKeys: string[] = [];
 
     columns.forEach((col, idx) => {
       if (columnNamesSet.has(col.name)) {
         alert(`Error: La columna "${col.name}" está duplicada.`);
-        return null; // Terminar la ejecución si hay duplicados
+        return null;
       }
 
-      columnNamesSet.add(col.name); // Añadir el nombre de la columna al set
-
+      columnNamesSet.add(col.name);
       let sqlType = '';
 
       switch (col.type) {
@@ -79,32 +99,63 @@ const Sqlcontent: React.FC = () => {
         case 'Número': sqlType = 'INT'; break;
         case 'Fecha': sqlType = 'DATE'; break;
         case 'Fecha y Hora': sqlType = 'DATETIME'; break;
-        default: sqlType = 'VARCHAR(255)'; // Valor predeterminado
+        default: sqlType = 'VARCHAR(255)';
       }
 
-      sql += `${col.name} ${sqlType}`; // Para cada columna, agregamos su nombre y tipo de dato al SQL
-
+      sql += `${col.name} ${sqlType}`;
       if (!col.isNullable) {
-        sql += ' NOT NULL'; // Si la columna no permite valores nulos, agregamos not null
+        sql += ' NOT NULL';
       }
+
+      // Llave primaria
+      if (col.isPrimaryKey) {
+        sql += ' PRIMARY KEY';
+      }
+
+      // Índice único
+      if (col.isUnique) {
+        sql += ' UNIQUE';
+      }
+
+    // llave foránea
+    if (col.isForeignKey) {
+      // construimos la clausula de la llave foranea sin on delete ni on update inicialmente
+      let foreignKeyClause = `FOREIGN KEY (${col.name}) REFERENCES ${col.relatedTable}(${col.relatedColumn})`;
+
+      // agregamos on delete solo si se selecciono una opción válida
+      if (col.onDelete && col.onDelete !== 'RESTRICT') {
+        foreignKeyClause += ` ON DELETE ${col.onDelete}`;
+      }
+
+      // agregamos on updatesolo si se selecciono una opción válida
+      if (col.onUpdate && col.onUpdate !== 'RESTRICT') {
+        foreignKeyClause += ` ON UPDATE ${col.onUpdate}`;
+      }
+
+      foreignKeys.push(foreignKeyClause);
+    }
+
 
       if (idx < columns.length - 1) {
-        sql += ', '; // Si no es la última columna, agregamos una coma
+        sql += ', ';
       }
     });
 
-    sql += ');'; // Cerrar la sentencia
+    if (foreignKeys.length > 0) {
+      sql += ', ' + foreignKeys.join(', ');
+    }
+
+    sql += ');';
 
     console.log(`Sentencia SQL generada: ${sql}`);
     return sql;
   };
 
-  // Función para enviar la sentencia SQL al backend
+  // Enviar el SQL generado al servidor
   const handleSubmit = async () => {
     const sql = generateSQL();
     if (!sql) return;
 
-    // Obtenemos el UUID de la base de datos del localStorage
     const databaseUUID = localStorage.getItem('sessionUUID');
     if (!databaseUUID) {
       alert('Error: No se encontró el UUID de la base de datos.');
@@ -112,14 +163,14 @@ const Sqlcontent: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${config.apiBaseUrl}`, { // Correcion API de Fetch 
+      const response = await fetch(`${config.apiBaseUrl}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           databaseName: databaseUUID,
-          sqlQuery: sql, // Enviar la sentencia SQL generada
+          sqlQuery: sql,
         }),
       });
 
@@ -132,29 +183,23 @@ const Sqlcontent: React.FC = () => {
         alert(`Error: ${result.message}`);
       }
     } catch (error) {
-      if (error instanceof Error) {
-        console.error('Error al ejecutar la sentencia:', error.message);
-        alert(`Hubo un error al ejecutar la sentencia: ${error.message}`);
-      } else {
-        console.error('Error desconocido:', error);
-        alert('Hubo un error desconocido al ejecutar la sentencia.');
-      }
+      console.error('Error:', error);
+      alert('Hubo un error al ejecutar la sentencia.');
     }
   };
 
-  // Función para crear una nueva tabla y reiniciar los formularios
+  // Crear una nueva tabla y reiniciar el formulario
   const handleNewTable = () => {
     if (formFilled) {
       const confirmReset = window.confirm('¿Seguro que quieres crear una nueva tabla? Tu configuración actual se perderá.');
       if (!confirmReset) return;
     }
 
-    // Restablecemos el estado para iniciar una nueva tabla
     setTableName('');
     setColumnCount(1);
     setColumns([]);
     setShowColumnConfig(false);
-    setFormFilled(false); // Reiniciamos el estado de las columnas configuradas
+    setFormFilled(false);
   };
 
   return (
@@ -163,7 +208,6 @@ const Sqlcontent: React.FC = () => {
         <h3 className="card-title">Crear nueva tabla</h3>
       </div>
       <div className="card-body">
-        {/* Mostrar el formulario inicial solo si no se ha hecho clic en "Crear" */}
         {!showColumnConfig && (
           <CreateTableForm
             tableName={tableName}
@@ -174,7 +218,6 @@ const Sqlcontent: React.FC = () => {
           />
         )}
 
-        {/* Mostrar el formulario de configuración de columnas si ya se ha dado clic en "Crear" */}
         {showColumnConfig && (
           <div className="mt-4">
             <h4>Configurar columnas</h4>
@@ -185,42 +228,20 @@ const Sqlcontent: React.FC = () => {
                   index={index}
                   column={col}
                   handleColumnChange={handleColumnChange}
+                  foreignTables={foreignTables} // Pasamos las tablas foráneas para su selección
                 />
               ))}
 
-              {/* Botón para agregar nueva columna */}
-              <button
-                type="button"
-                className="btn btn-success mt-3 me-3"
-                onClick={addNewColumn}
-              >
+              <button type="button" className="btn btn-success mt-3 me-3" onClick={addNewColumn}>
                 Agregar nueva columna
               </button>
-
-              {/* Botón para quitar la última columna */}
-              <button
-                type="button"
-                className="btn btn-danger mt-3 me-3"
-                onClick={removeLastColumn}
-              >
+              <button type="button" className="btn btn-danger mt-3 me-3" onClick={removeLastColumn}>
                 Quitar última columna
               </button>
-
-              {/* Botón para crear la tabla */}
-              <button
-                type="button"
-                className="btn btn-primary mt-3"
-                onClick={handleSubmit}
-              >
+              <button type="button" className="btn btn-primary mt-3" onClick={handleSubmit}>
                 Crear Tabla
               </button>
-
-              {/* Botón para crear una nueva tabla (reiniciar formularios) */}
-              <button
-                type="button"
-                className="btn btn-warning mt-3 ms-3"
-                onClick={handleNewTable}
-              >
+              <button type="button" className="btn btn-warning mt-3 ms-3" onClick={handleNewTable}>
                 Crear nueva tabla
               </button>
             </form>

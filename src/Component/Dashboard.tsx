@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import Consola from './Consola'; 
 import TableroContent from './TableroContent';
 import Sqlcontent from './Sqlcontent';
-import RelacionesContent from './RelacionesContent'; 
 
 const Dashboard: React.FC = () => {
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'terminal' | 'sql' | 'relaciones'>('dashboard');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'terminal' | 'sql'>('dashboard');
 
   return (
     <div className="wrapper">
@@ -45,16 +44,6 @@ const Dashboard: React.FC = () => {
                   <p>SQL</p>
                 </a>
               </li>
-
-              {/* Nueva opción para gestionar Relaciones */}
-              <li className="nav-item">
-                <a href="#"
-                  className={`nav-link ${activeSection === 'relaciones' ? 'active' : ''}`}
-                  onClick={() => setActiveSection('relaciones')}>
-                  <i className="nav-icon fas fa-link"></i>
-                  <p>Relaciones</p>
-                </a>
-              </li>
             </ul>
           </nav>
         </div>
@@ -66,7 +55,7 @@ const Dashboard: React.FC = () => {
           <div className="container-fluid">
             <div className="row mb-2">
               <div className="col-sm-6">
-                <h1>{activeSection === 'dashboard' ? 'Tablero' : activeSection === 'terminal' ? 'Terminal' : activeSection === 'sql' ? 'SQL' : 'Relaciones'}</h1>
+                <h1>{activeSection === 'dashboard' ? 'Tablero' : activeSection === 'terminal' ? 'Terminal' : 'SQL'}</h1>
               </div>
             </div>
           </div>
@@ -78,7 +67,6 @@ const Dashboard: React.FC = () => {
             {activeSection === 'dashboard' && <TableroContent />}
             {activeSection === 'terminal' && <Consola />}
             {activeSection === 'sql' && <Sqlcontent />}
-            {activeSection === 'relaciones' && <RelacionesContent />} {/* aqui pondre el nuevo componente */}
           </div>
         </section>
       </div>
