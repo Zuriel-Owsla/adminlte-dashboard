@@ -189,18 +189,13 @@ const Sqlcontent: React.FC = () => {
   };
 
   // Crear una nueva tabla y reiniciar el formulario
-  const handleNewTable = () => {
-    if (formFilled) {
-      const confirmReset = window.confirm('¿Seguro que quieres crear una nueva tabla? Tu configuración actual se perderá.');
-      if (!confirmReset) return;
-    }
-
-    setTableName('');
-    setColumnCount(1);
-    setColumns([]);
-    setShowColumnConfig(false);
-    setFormFilled(false);
-  };
+    const handleNewTable = () => {
+      setTableName('');
+      setColumnCount(1);
+      setColumns([]);
+      setShowColumnConfig(false);
+      setFormFilled(false);
+    };
 
   return (
     <div className="card">
