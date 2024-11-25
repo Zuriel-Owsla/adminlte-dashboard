@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { generarUUID } from './generadorUUID';
 import '../estilos.css';
 import config from '../config'; // Importar el archivo de configuración
+import LanguageSelection from './LanguageSelection'; // Importar el componente de selección de lenguaje
 
 const Consola: React.FC = () => {
   const [sqlCommand, setSqlCommand] = useState('');
@@ -22,6 +23,7 @@ const Consola: React.FC = () => {
     localStorage.setItem('sessionUUID', newUUID);
     setSessionUUID(newUUID);
     console.log(`Nuevo UUID generado manualmente: ${newUUID}`);
+    window.location.reload();
   };
 
   const processSQL = (sql: string) => {
@@ -149,6 +151,7 @@ const Consola: React.FC = () => {
 
   return (
     <div>
+      <LanguageSelection /> {/* Mostrar la tarjeta de selección si es necesario */}
       <textarea
         className="form-control custom-textarea"
         rows={10}
