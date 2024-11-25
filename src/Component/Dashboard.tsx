@@ -16,12 +16,12 @@ const Dashboard: React.FC = () => {
         <div className="sidebar">
           <nav className="mt-2">
             <ul className="nav nav-pills nav-sidebar flex-column" role="menu">
-              {/* Opción del Dashboard */}
+              {/* Opción del Tutorial */}
               <li className="nav-item">
                 <a href="#" className={`nav-link ${activeSection === 'dashboard' ? 'active' : ''}`}
                   onClick={() => setActiveSection('dashboard')}>
-                  <i className="nav-icon fas fa-tachometer-alt"></i>
-                  <p>Tablero</p>
+                  <i className="nav-icon fas fa-chalkboard-teacher"></i>
+                  <p>Tutorial</p>
                 </a>
               </li>
 
@@ -55,7 +55,14 @@ const Dashboard: React.FC = () => {
           <div className="container-fluid">
             <div className="row mb-2">
               <div className="col-sm-6">
-                <h1>{activeSection === 'dashboard' ? 'Tablero' : activeSection === 'terminal' ? 'Terminal' : 'SQL'}</h1>
+                <h1>
+                  {activeSection === 'dashboard' ? (
+                    <>
+                      <i className="fas fa-chalkboard-teacher" style={{ marginRight: '0.5rem' }}></i>
+                      Tutorial
+                    </>
+                  ) : activeSection === 'terminal' ? 'Terminal' : 'SQL'}
+                </h1>
               </div>
             </div>
           </div>
