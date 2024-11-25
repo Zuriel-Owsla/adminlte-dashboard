@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Consola from './Consola'; 
-import TableroContent from './TableroContent';
+import Tutorial from './Tutorial';
 import Sqlcontent from './Sqlcontent';
 
 const Dashboard: React.FC = () => {
@@ -71,7 +71,7 @@ const Dashboard: React.FC = () => {
         <section className="content">
           <div className="container-fluid">
             {/* Renderizado condicional del contenido basado en la sección activa */}
-            {activeSection === 'dashboard' && <TableroContent />}
+            {activeSection === 'dashboard' && <Tutorial />}
             {activeSection === 'terminal' && <Consola />}
             {activeSection === 'sql' && <Sqlcontent />}
           </div>

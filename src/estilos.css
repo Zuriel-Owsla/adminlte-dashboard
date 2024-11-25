@@ -1,3 +1,53 @@
+/* Flechas apuntando a los widgets */
+.arrow-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+/* Flecha tutorial */
+.arrow-tutorial {
+  font-size: 36px;
+  color: #007bff;  
+  margin-left: -500px; 
+}
+
+.arrow-tutorial-text{
+  position: relative;
+  bottom: 31px;
+  margin-left: -390px;
+}
+/* Flecha terminal */
+.arrow-terminal {
+  position: relative;
+  top: 40px;
+  font-size: 36px;
+  color: #28a745; 
+  margin-left: -1600px;
+}
+
+.arrow-terminal-text{
+  position: relative;
+  top: 10px;
+  margin-left: -1490px;
+}
+
+/* Flecha sql */
+.arrow-sql {
+  position: relative;
+  top: 83px;
+  font-size: 36px;
+  color: #ffc107; 
+  margin-left: -2700px;
+}
+
+.arrow-sql-text{
+  position: relative;
+  top: 53px;
+  margin-left: -2620px;
+}
+
 .custom-textarea {
     background-color: rgb(49, 49, 49);   
     color: yellow;            
