@@ -9,21 +9,33 @@ const Consola: React.FC = () => {
   const [sessionUUID, setSessionUUID] = useState<string | null>(null);
 
   useEffect(() => {
+    // Recuperamos el UUID de la sesión desde localStorage
     let storedUUID = localStorage.getItem('sessionUUID');
     if (!storedUUID) {
+      // Si no hay UUID, lo generamos y lo guardamos
       storedUUID = generarUUID();
-      localStorage.setItem('sessionUUID', storedUUID); 
+      localStorage.setItem('sessionUUID', storedUUID);
     }
-    setSessionUUID(storedUUID); 
+    setSessionUUID(storedUUID);
     console.log(`UUID de la sesión: ${storedUUID}`);
   }, []);
 
   const regenerateUUID = () => {
+    // Comparamos el UUID actual con el almacenado
+    const currentUUID = localStorage.getItem('sessionUUID');
     const newUUID = generarUUID();
-    localStorage.setItem('sessionUUID', newUUID);
-    setSessionUUID(newUUID);
-    console.log(`Nuevo UUID generado manualmente: ${newUUID}`);
-    window.location.reload();
+    
+    if (currentUUID !== newUUID) {
+      // Si es un UUID diferente, lo generamos y lo guardamos
+      localStorage.setItem('sessionUUID', newUUID);
+      setSessionUUID(newUUID);
+      console.log(`Nuevo UUID generado manualmente: ${newUUID}`);
+      
+      // Lógica para abrir el modal solo si el UUID cambió
+      // Aquí se puede manejar la lógica para mostrar el modal si es necesario
+    } else {
+      console.log('El UUID no ha cambiado, no se genera un nuevo UUID.');
+    }
   };
 
   const processSQL = (sql: string) => {
@@ -151,7 +163,7 @@ const Consola: React.FC = () => {
 
   return (
     <div>
-      <LanguageSelection /> {/* Mostrar la tarjeta de selección si es necesario */}
+      <LanguageSelection sessionUUID={sessionUUID} />
       <textarea
         className="form-control custom-textarea"
         rows={10}
