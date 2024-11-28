@@ -182,22 +182,28 @@
 
 /* posicion botones arquitectura */
 .architecture-selection .architecture-btn {
-  position: relative; 
-  top: 30px; 
-  left: 0; 
+  position: static; 
+  margin: 15px 10px; 
 }
+
 
 
 /*boton regresar*/
+/* Estilo optimizado para el botón regresar */
 .back-button {
   position: absolute; 
-  bottom: 195px; 
+  top: 10px; 
   left: 10px; 
-  transform: translateX(0);
-  background-color: #f8f9fa; 
+  background-color: rgb(73, 73, 73); 
+  color: white; 
+  border: none; 
   padding: 10px 20px; 
-  border-radius: 5px; 
+  border-radius: 5px;
+  cursor: pointer; 
+  z-index: 1050; 
+  font-size: 16px; 
 }
+
 
 /* color boton regresar*/
 .architecture-selection .back-button {
