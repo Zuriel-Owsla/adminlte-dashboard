@@ -16,9 +16,15 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = ({ sessionUUID }) =>
     if (sessionUUID && sessionUUID !== storedUUID) {
       sessionStorage.setItem('sessionUUID', sessionUUID);
       setStoredUUID(sessionUUID);
+  
+      // reiniciamos los estados relevantes para el flujo del modal
+      setLanguage(null);
+      setArchitecture(null);
+      setShowSaveModal(false);
       setShowLanguageArchitectureModal(true);
     }
   }, [sessionUUID, storedUUID]);
+  
 
   const handleRegenerateUUID = () => {
     const newUUID = generarUUID();
@@ -26,9 +32,9 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = ({ sessionUUID }) =>
     setStoredUUID(newUUID);
     setLanguage(null);
     setArchitecture(null);
+    setShowSaveModal(false);
     setShowLanguageArchitectureModal(true);
-    console.log('Nuevo UUID generado:', newUUID);
-  };
+  };  
 
   const handleLanguageChange = (selectedLanguage: string) => {
     setLanguage(selectedLanguage);
@@ -56,8 +62,13 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = ({ sessionUUID }) =>
   };
 
   const handleCancel = () => {
+    // reiniciamos los estados relevantes para el flujo del modal
+    setLanguage(null);
+    setArchitecture(null);
     setShowSaveModal(false);
+    setShowLanguageArchitectureModal(true);
   };
+  
 
   return (
     <div>
