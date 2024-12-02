@@ -88,49 +88,57 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = ({ sessionUUID }) =>
                 </button>
               </div>
             )}
-            {language !== null && !architecture && (
-              <div className="architecture-selection">
-                <h3>Selecciona la arquitectura para {language}</h3>
+          {language !== null && !architecture && (
+            <div className="architecture-selection">
+              <h3>Selecciona la arquitectura para {language}</h3>
+              <div className="language-logo">
                 {language === 'Java' && (
-                  <>
-                    <button
-                      onClick={() => handleArchitectureChange('MVC')}
-                      className="architecture-btn"
-                    >
-                      MVC
-                    </button>
-                    <button
-                      onClick={() => handleArchitectureChange('API Rest')}
-                      className="architecture-btn"
-                    >
-                      API Rest
-                    </button>
-                  </>
+                  <img src="/assets/java.svg" alt="Java Logo" />
                 )}
                 {language === 'PHP' && (
-                  <>
-                    <button
-                      onClick={() => handleArchitectureChange('MVC')}
-                      className="architecture-btn"
-                    >
-                      MVC
-                    </button>
-                    <button
-                      onClick={() => handleArchitectureChange('Standalone')}
-                      className="architecture-btn"
-                    >
-                      Standalone
-                    </button>
-                  </>
+                  <img src="/assets/php_logo.svg" alt="PHP Logo" />
                 )}
-                <button
-                  onClick={() => setLanguage(null)}
-                  className="btn btn-secondary back-button"
-                >
-                  <i className="fas fa-arrow-left"></i> Regresar
-                </button>
               </div>
-            )}
+              {language === 'Java' && (
+                <>
+                  <button
+                    onClick={() => handleArchitectureChange('MVC')}
+                    className="architecture-btn"
+                  >
+                    MVC
+                  </button>
+                  <button
+                    onClick={() => handleArchitectureChange('API Rest')}
+                    className="architecture-btn"
+                  >
+                    API Rest
+                  </button>
+                </>
+              )}
+              {language === 'PHP' && (
+                <>
+                  <button
+                    onClick={() => handleArchitectureChange('MVC')}
+                    className="architecture-btn"
+                  >
+                    MVC
+                  </button>
+                  <button
+                    onClick={() => handleArchitectureChange('Standalone')}
+                    className="architecture-btn"
+                  >
+                    Standalone
+                  </button>
+                </>
+              )}
+              <button
+                onClick={() => setLanguage(null)}
+                className="btn btn-secondary back-button"
+              >
+                <i className="fas fa-arrow-left"></i> Regresar
+              </button>
+            </div>
+          )}
           </div>
         </div>
       )}

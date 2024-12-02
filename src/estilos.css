@@ -220,6 +220,18 @@
   background-color: rgb(26, 26, 26); 
 }
 
+.language-logo {
+  margin: 1px 0;
+}
+
+.language-logo img {
+  width: 40px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+
 /* Estilo para textarea */
 .custom-textarea {
     background-color: rgb(49, 49, 49);   
